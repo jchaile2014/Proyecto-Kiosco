@@ -38,12 +38,11 @@
                             <span class="nav-link-title">Pedidos</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <span class="nav-link disabled" title="Todavía no está disponible">
+                    <li class="nav-item" th:classappend="${activo == 'fiados'} ? 'active'">
+                        <a class="nav-link" th:href="@{/fiados}">
                             <span class="nav-link-icon"><i class="ti ti-notebook" aria-hidden="true"></i></span>
                             <span class="nav-link-title">Fiados</span>
-                            <span class="badge badge-sm bg-secondary-lt ms-auto">Pronto</span>
-                        </span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <span class="nav-link disabled" title="Todavía no está disponible">

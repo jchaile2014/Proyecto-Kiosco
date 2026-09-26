@@ -12,7 +12,7 @@ public final class LimpiezaDeBase {
 
     /** En orden, para no violar claves foráneas. */
     private static final List<String> TABLAS =
-            List.of("movimiento_caja", "nota_pedido", "pedido", "proveedor", "cierre_diario");
+            List.of("movimiento_fiado", "cliente", "movimiento_caja", "nota_pedido", "pedido", "proveedor", "cierre_diario");
 
     private LimpiezaDeBase() {
     }

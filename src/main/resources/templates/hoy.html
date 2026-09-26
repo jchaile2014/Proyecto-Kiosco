@@ -241,11 +241,15 @@
                                 <td class="text-end monto fw-medium" th:classappend="${m.tipo.entrada} ? 'text-green' : 'text-red'"
                                     th:text="${@fmt.plataConSigno(m.monto, m.tipo.entrada)}">+ $ 3.200</td>
                                 <td>
-                                    <a class="btn btn-ghost-secondary btn-icon btn-sm" th:if="${m.pedidoId != null}" th:href="@{/pedidos}"
+                                    <a class="btn btn-ghost-secondary btn-icon btn-sm" th:if="${m.origen == 'pedidos'}" th:href="@{/pedidos}"
                                        title="Es el pago de un pedido: se corrige desde Pedidos" aria-label="Ir a Pedidos">
                                         <i class="ti ti-truck" aria-hidden="true"></i>
                                     </a>
-                                    <button type="button" class="btn btn-ghost-secondary btn-icon btn-sm" th:if="${m.pedidoId == null}"
+                                    <a class="btn btn-ghost-secondary btn-icon btn-sm" th:if="${m.origen == 'fiados'}" th:href="@{/fiados}"
+                                       title="Es el cobro de un fiado: se corrige desde Fiados" aria-label="Ir a Fiados">
+                                        <i class="ti ti-notebook" aria-hidden="true"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-ghost-secondary btn-icon btn-sm" th:if="${m.origen == null}"
                                             th:attr="hx-post=@{/movimientos/{id}/eliminar(id=${m.id})}"
                                             hx-target="#panel-dia" hx-swap="outerHTML"
                                             hx-confirm="¿Borrar este movimiento?"

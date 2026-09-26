@@ -112,4 +112,15 @@ public class MovimientoCaja {
     public Long getPedidoId() {
         return pedidoId;
     }
+
+    /**
+     * Si el movimiento lo generó otra pantalla ("pedidos" o "fiados"), cuál: se corrige desde
+     * ahí para que no quede desparejo. Null si se cargó a mano en la caja.
+     */
+    public String getOrigen() {
+        if (pedidoId != null) {
+            return "pedidos";
+        }
+        return tipo == TipoMovimiento.COBRO_FIADO ? "fiados" : null;
+    }
 }

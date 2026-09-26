@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina('Fiados', ~{::main}, 'fiados')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="page-pretitle">Libreta</div>
+            <h2 class="page-title">Fiados</h2>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div id="panel-fiados" th:fragment="panel">
+
+                <div class="alert alert-success alert-dismissible" role="status" th:if="${aviso != null}">
+                    <i class="ti ti-check me-2" aria-hidden="true"></i><span th:text="${aviso}"></span>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></a>
+                </div>
+
+                <div class="row row-cards mb-3">
+                    <div class="col-lg-8">
+                        <form class="card h-100" method="post" th:action="@{/fiados/anotar}" th:object="${fiadoForm}"
+                              hx-post="/fiados/anotar" hx-target="#panel-fiados" hx-swap="outerHTML">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="ti ti-pencil-plus text-orange me-2" aria-hidden="true"></i>Anotar fiado</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label" for="fiado-cliente">Quién</label>
+                                        <input id="fiado-cliente" type="text" class="form-control" list="clientes-fiado"
+                                               maxlength="80" autocomplete="off" placeholder="Marta"
+                                               th:field="*{cliente}" th:classappend="${campoConError == 'cliente'} ? 'is-invalid'"
+                                               th:autofocus="${campoConError != 'monto'}">
+                                        <datalist id="clientes-fiado">
+                                            <option th:each="n : ${nombres}" th:value="${n}"></option>
+                                        </datalist>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label" for="fiado-descripcion">
+                                            Qué lleva <span class="form-label-description">opcional</span>
+                                        </label>
+                                        <input id="fiado-descripcion" type="text" class="form-control" maxlength="200"
+                                               autocomplete="off" placeholder="Pan y leche" th:field="*{descripcion}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label" for="fiado-monto">Monto</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input id="fiado-monto" type="text" inputmode="decimal" autocomplete="off"
+                                                   class="form-control monto" placeholder="3.500"
+                                                   th:field="*{monto}" th:classappend="${campoConError == 'monto'} ? 'is-invalid'"
+                                                   th:autofocus="${campoConError == 'monto'}">
+                                        </div>
+                                    </div>
+                                    <div class="col-12" th:if="${errorAnotar != null}">
+                                        <div class="text-red small" th:text="${errorAnotar}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex align-items-center">
+                                <span class="text-secondary small">Si es la primera vez que lleva fiado, se agrega solo a la lista.</span>
+                                <button class="btn btn-warning ms-auto" type="submit">
+                                    <i class="ti ti-plus me-1" aria-hidden="true"></i>Anotar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="subheader">Te deben en total</div>
+                                <div class="h1 mb-1 monto text-orange" th:text="${@fmt.plata(totalEnLaCalle)}">$ 0</div>
+                                <div class="text-secondary small"
+                                     th:text="${abiertas.size() == 1} ? '1 cliente con cuenta abierta' : |${abiertas.size()} clientes con cuenta abierta|">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title">Cuentas abiertas</h3>
+                    </div>
+                    <div class="card-body text-center text-secondary py-5" th:if="${abiertas.isEmpty()}">
+                        <i class="ti ti-mood-happy d-block mb-2 icono-vacio" aria-hidden="true"></i>
+                        Nadie te debe nada.
+                    </div>
+                    <div class="table-responsive" th:unless="${abiertas.isEmpty()}">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Debe desde</th>
+                                <th>Último pago</th>
+                                <th class="text-end">Debe</th>
+                                <th class="w-1"><span class="visually-hidden">Acciones</span></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="c : ${abiertas}" th:with="debe=${@fmt.plata(c.saldo)}">
+                                <td>
+                                    <a class="fw-medium" th:href="@{/fiados/{id}(id=${c.cliente.id})}" th:text="${c.cliente.nombre}">Marta</a>
+                                    <div class="text-secondary small" th:if="${c.cliente.telefono != null}" th:text="${c.cliente.telefono}"></div>
+                                </td>
+                                <td th:classappend="${@fmt.diasDesde(c.desde) > 30} ? 'text-orange'" th:text="${@fmt.haceCuanto(c.desde)}">hace 12 días</td>
+                                <td class="text-secondary" th:text="${c.ultimoPago != null} ? ${@fmt.haceCuanto(c.ultimoPago)} : 'Todavía no pagó'">ayer</td>
+                                <td class="text-end monto fw-bold" th:text="${debe}">$ 12.300</td>
+                                <td class="text-nowrap">
+                                    <button type="button" class="btn btn-success btn-sm"
+                                            th:attr="hx-post=@{/fiados/{id}/pago-total(id=${c.cliente.id})},
+                                                     hx-confirm=|¿${c.cliente.nombre} pagó los ${debe}? Entra a la caja de hoy y la cuenta queda en cero.|"
+                                            hx-target="#panel-fiados" hx-swap="outerHTML">
+                                        <i class="ti ti-check me-1" aria-hidden="true"></i>Ya pagó
+                                    </button>
+                                    <a class="btn btn-sm" th:href="@{/fiados/{id}(id=${c.cliente.id})}">Libreta</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" th:unless="${alDia.isEmpty()}">
+                    <div class="card-header">
+                        <h3 class="card-title">Al día</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm" th:each="c : ${alDia}" th:href="@{/fiados/{id}(id=${c.cliente.id})}"
+                               th:text="${c.cliente.nombre}">Roberto</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -33,4 +33,22 @@ class MontosTest {
     void rechazaLoQueNoEsUnMontoValido(String texto) {
         assertThatThrownBy(() -> Montos.parse(texto)).isInstanceOf(MontoInvalidoException.class);
     }
+
+    @ParameterizedTest(name = "\"{0}\" → {1} %")
+    @CsvSource(delimiter = '|', value = {
+            "10    | 10",
+            "2,5   | 2.5",
+            "2.5   | 2.5",
+            "10 %  | 10",
+            "100   | 100",
+    })
+    void entiendeElPorcentajeDeInteres(String texto, BigDecimal esperado) {
+        assertThat(Montos.parsePorcentaje(texto)).isEqualByComparingTo(esperado);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "diez", "0", "-5", "150", "2,555"})
+    void rechazaPorcentajesInvalidos(String texto) {
+        assertThatThrownBy(() -> Montos.parsePorcentaje(texto)).isInstanceOf(MontoInvalidoException.class);
+    }
 }

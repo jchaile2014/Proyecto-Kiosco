@@ -4,6 +4,11 @@ import org.kiosco.caja.CajaService;
 import org.kiosco.caja.MovimientoCaja;
 import org.kiosco.caja.MovimientoCajaRepository;
 import org.kiosco.caja.TipoMovimiento;
+import org.kiosco.fiados.Cliente;
+import org.kiosco.fiados.FiadoService;
+import org.kiosco.fiados.MovimientoFiado;
+import org.kiosco.fiados.MovimientoFiadoRepository;
+import org.kiosco.fiados.TipoMovimientoFiado;
 import org.kiosco.pedidos.Pedido;
 import org.kiosco.pedidos.PedidoRepository;
 import org.kiosco.pedidos.PedidoService;
@@ -28,8 +33,8 @@ import java.util.Random;
 
 /**
  * Con el perfil "demo" la app arranca con una base en memoria, dos meses de movimientos
- * inventados y algunos proveedores con pedidos. Sirve para probarla sin instalar MySQL y
- * para sacar capturas sin datos reales.
+ * inventados, algunos proveedores con pedidos y clientes con fiado. Sirve para probarla sin
+ * instalar MySQL y para sacar capturas sin datos reales.
  */
 @Component
 @Profile("demo")
@@ -43,14 +48,19 @@ class DatosDemo implements ApplicationRunner {
     private final CajaService caja;
     private final PedidoService pedidos;
     private final PedidoRepository pedidoRepository;
+    private final FiadoService fiados;
+    private final MovimientoFiadoRepository renglonesFiado;
     private final Clock clock;
 
     DatosDemo(MovimientoCajaRepository movimientos, CajaService caja, PedidoService pedidos,
-              PedidoRepository pedidoRepository, Clock clock) {
+              PedidoRepository pedidoRepository, FiadoService fiados, MovimientoFiadoRepository renglonesFiado,
+              Clock clock) {
         this.movimientos = movimientos;
         this.caja = caja;
         this.pedidos = pedidos;
         this.pedidoRepository = pedidoRepository;
+        this.fiados = fiados;
+        this.renglonesFiado = renglonesFiado;
         this.clock = clock;
     }
 
@@ -82,6 +92,7 @@ class DatosDemo implements ApplicationRunner {
         }
         movimientos.saveAll(nuevos);
         cargarPedidos(azar, ahora.toLocalDate());
+        cargarFiados(ahora.toLocalDate());
         log.info("Modo demo: {} movimientos de ejemplo cargados", movimientos.count());
     }
 
@@ -119,6 +130,56 @@ class DatosDemo implements ApplicationRunner {
         pedido.marcarLlegada(dia, boleta);
         pedido = pedidoRepository.save(pedido);
         caja.registrarPagoDePedido(dia, boleta, "Boleta de " + proveedor.getNombre(), pedido.getId());
+    }
+
+    private void cargarFiados(LocalDate hoy) {
+        Cliente marta = fiados.guardarCliente(null, "Marta Gómez", "11 4567-8910");
+        Cliente carlos = fiados.guardarCliente(null, "Carlos del taller", null);
+        Cliente lucia = fiados.guardarCliente(null, "Lucía (3° B)", null);
+        Cliente roberto = fiados.guardarCliente(null, "Roberto", null);
+
+        llevo(marta, hoy.minusDays(9), "Pan y leche", 2300);
+        llevo(marta, hoy.minusDays(7), "Fiambre y queso", 4500);
+        pago(marta, hoy.minusDays(4), 5000);
+        llevo(marta, hoy.minusDays(2), "Cigarrillos", 3800);
+        llevo(marta, hoy, "Gaseosa 2,25 L", 2600);
+
+        // Hace más de un mes que debe y ya se le cobró interés
+        llevo(carlos, hoy.minusDays(40), "Yerba y azúcar", 6200);
+        llevo(carlos, hoy.minusDays(33), "Galletitas y jugo", 3900);
+        llevo(carlos, hoy.minusDays(26), "Fiambre", 5400);
+        renglon(carlos, hoy.minusDays(10), TipoMovimientoFiado.INTERES, "Interés 10 % sobre $ 15.500", 1550, null);
+
+        // Una cuenta que ya pagó entera y otra nueva
+        List<MovimientoFiado> saldada = List.of(
+                llevo(lucia, hoy.minusDays(20), "Pañales", 9800),
+                llevo(lucia, hoy.minusDays(16), "Leche y galletitas", 3100),
+                pago(lucia, hoy.minusDays(12), 12900));
+        saldada.forEach(r -> r.saldar(hoy.minusDays(12).atTime(18, 0)));
+        renglonesFiado.saveAll(saldada);
+        llevo(lucia, hoy.minusDays(1), "Leche x2", 2400);
+
+        // Pagó hoy: aparece en la caja del día como fiado cobrado
+        List<MovimientoFiado> hoyPago = List.of(
+                llevo(roberto, hoy.minusDays(3), "Carbón y hielo", 4200),
+                pago(roberto, hoy, 4200));
+        hoyPago.forEach(r -> r.saldar(hoy.atTime(9, 30)));
+        renglonesFiado.saveAll(hoyPago);
+    }
+
+    private MovimientoFiado llevo(Cliente cliente, LocalDate dia, String detalle, long monto) {
+        return renglon(cliente, dia, TipoMovimientoFiado.LLEVO, detalle, monto, null);
+    }
+
+    private MovimientoFiado pago(Cliente cliente, LocalDate dia, long monto) {
+        MovimientoCaja cobro = caja.registrarCobroDeFiado(dia, BigDecimal.valueOf(monto), cliente.getNombre());
+        return renglon(cliente, dia, TipoMovimientoFiado.PAGO, null, monto, cobro.getId());
+    }
+
+    private MovimientoFiado renglon(Cliente cliente, LocalDate dia, TipoMovimientoFiado tipo, String detalle,
+                                    long monto, Long cobroId) {
+        return renglonesFiado.save(new MovimientoFiado(cliente, dia, dia.atTime(9, 0), tipo, detalle,
+                BigDecimal.valueOf(monto).setScale(2), cobroId));
     }
 
     private static void agregar(List<MovimientoCaja> lista, LocalDate dia, Random azar, LocalDateTime ahora,

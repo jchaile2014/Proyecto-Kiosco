@@ -1,6 +1,6 @@
 # Kiosco
 
-Control diario de la caja de un kiosco de barrio: lo que se vende, lo que se gasta y lo que se les paga a los proveedores, con cierre de caja automático al terminar cada día.
+Control diario de la caja de un kiosco de barrio: lo que se vende, lo que se gasta, lo que se les paga a los proveedores y lo que se fía, con cierre de caja automático al terminar cada día.
 
 Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) y se abre en una ventana propia, así que se usa como una app de escritorio. No necesita internet.
 
@@ -26,11 +26,23 @@ Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) 
 - **"Llegó" con el monto de la boleta**: se marca desde la caja del día o desde Pedidos, y la boleta queda sola como salida de plata. Los pedidos atrasados se marcan en amarillo.
 - **Deshacer**: si se marcó por error, el pedido vuelve a pendiente y el pago se borra de la caja.
 
+### Fiados
+
+![Libreta de un cliente](docs/captura-fiados.png)
+
+- **Anotar en segundos**: quién, qué lleva y cuánto. Si es la primera vez que lleva fiado, el cliente se agrega solo.
+- **Libreta con suma constante**: cada renglón muestra cuánto "va debiendo", como la cuenta al margen de una libreta de papel.
+- **"Ya pagó"**: con un botón, la plata entra a la caja del día y la cuenta queda en cero. Los renglones pagados pasan al historial y no se pierden.
+- **Pagos a cuenta**: si deja una parte, se anota, entra a la caja y se descuenta de lo que debe.
+- **Interés a pedido**: se aplica un % sobre lo que debe en ese momento y queda como un renglón más, a la vista.
+- **Cuánto te deben en total** y desde hace cuánto debe cada uno. Ese total no aparece en la pantalla principal.
+- **Correcciones**: se puede borrar un renglón anotado mal o deshacer un "ya pagó", y la caja se ajusta sola.
+
 ### Hoja de ruta
 
 - [x] Caja del día: ventas, gastos, balance y cierre automático
 - [x] Pedidos a proveedores: notas de qué pedirle a cada uno, días del preventista y "llegó" con el monto de la boleta
-- [ ] Fiados: libreta por cliente con saldo acumulado e interés a pedido
+- [x] Fiados: libreta por cliente con saldo acumulado, pagos, interés a pedido e historial
 - [ ] Resúmenes: últimos 7 días y mes por mes, con gráficos
 - [ ] Productos con stock opcional, backup automático e ícono de escritorio
 
@@ -50,12 +62,13 @@ Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) 
 - **El cierre diario es una foto guardada** (`cierre_diario`). El historial mensual queda armado de antemano y no hay que recalcular meses enteros cada vez.
 - **El reloj se inyecta** (`java.time.Clock`). Así los tests pueden simular que pasan los días, por ejemplo la PC apagada tres días, sin esperar a la medianoche.
 - **Seguridad pensada para uso local.** El servidor solo escucha en `127.0.0.1`. La protección CSRF evita que otra página abierta en el navegador cargue o borre movimientos. El token va en una cookie para que la pantalla, que queda abierta todo el día, siga funcionando aunque la app se reinicie.
-- **Módulos que no se pisan.** `caja` no conoce a `pedidos`: los pedidos anotan su pago a través del servicio de caja, y la pantalla `hoy` es la única que junta las dos cosas. El pago de una boleta queda enlazado a su pedido y solo se puede deshacer desde ahí, para que nunca quede un pedido "llegado" sin su pago.
+- **Módulos que no se pisan.** `caja` no conoce a `pedidos` ni a `fiados`: esos módulos anotan la plata a través del servicio de caja, y la pantalla `hoy` es la única que junta todo. El pago de una boleta y el cobro de un fiado solo se corrigen desde su módulo, para que la caja y el pedido o la libreta nunca queden desparejos.
+- **Fiar no es vender.** Lo que se lleva fiado no toca la caja, porque no entró plata. Recién cuando el cliente paga se registra un "cobro de fiado" en la caja del día. Así el balance diario refleja la plata real.
 - **Todo se renderiza en el servidor, con HTMX.** Los formularios actualizan solo el panel del día, sin recargar la página y sin mantener una SPA aparte. Los formularios de carga funcionan igual sin JavaScript.
 
 ## Probarla sin instalar MySQL (modo demo)
 
-El modo demo arranca con una base en memoria y dos meses de movimientos inventados.
+El modo demo arranca con una base en memoria y datos inventados: dos meses de ventas y gastos, proveedores con pedidos y clientes con fiado.
 
 ```bash
 mvn clean package
@@ -83,14 +96,15 @@ Las tablas se crean solas la primera vez gracias a Flyway. En lugar del archivo 
 mvn test
 ```
 
-Cubren cuatro cosas:
+Cubren cinco cosas:
 
 - La lectura de montos escritos a la argentina.
 - El cierre automático: días con la PC apagada, correcciones de días ya cerrados, días salteados y fechas futuras.
 - Las reglas de pedidos: notas que pasan al pedido, boleta que sale de la caja, deshacer y cancelar, y qué pedidos mostrar en la caja de hoy.
+- Las reglas de fiados: saldo acumulado, pagos parciales y totales, interés redondeado, historial, correcciones y que nunca se pueda pagar más de lo que se debe.
 - Las pantallas con MockMvc: carga con HTMX, errores de validación, redirección sin JavaScript y rechazo de pedidos sin token CSRF.
 
-Los tests de pantallas no corren dentro de una transacción, igual que la app real, donde cada pedido HTTP tiene la suya. Así aparecen los errores de carga diferida de Hibernate que un test transaccional escondería. Las migraciones también se probaron contra un MySQL 8 real, incluida la actualización de la versión 1 a la 2.
+Los tests de pantallas no corren dentro de una transacción, igual que la app real, donde cada pedido HTTP tiene la suya. Así aparecen los errores de carga diferida de Hibernate que un test transaccional escondería. Las migraciones también se probaron contra un MySQL 8 real, incluidas las actualizaciones de una versión de la base a la siguiente.
 
 ## Estructura
 
@@ -100,6 +114,7 @@ src/main/java/org/kiosco/
 ├── cierre/    cierre diario automático
 ├── hoy/       pantalla principal: junta caja, pedidos y avisos del día
 ├── pedidos/   proveedores, notas de qué pedir y pedidos
+├── fiados/    clientes y su libreta
 ├── comun/     montos, fechas y manejo de errores
 ├── config/    seguridad y reloj
 └── demo/      datos de ejemplo del modo demo

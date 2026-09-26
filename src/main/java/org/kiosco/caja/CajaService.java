@@ -59,6 +59,23 @@ public class CajaService {
         return pago;
     }
 
+    /** Lo que paga un cliente de su fiado entra a la caja de ese día. */
+    @Transactional
+    public MovimientoCaja registrarCobroDeFiado(LocalDate fecha, BigDecimal monto, String descripcion) {
+        return registrar(fecha, TipoMovimiento.COBRO_FIADO, monto, limpiar(descripcion, 200), null);
+    }
+
+    /** Se usa al borrar de la libreta un pago anotado por error. */
+    @Transactional
+    public void eliminarCobroDeFiado(Long movimientoId) {
+        movimientos.findById(movimientoId)
+                .filter(m -> m.getTipo() == TipoMovimiento.COBRO_FIADO)
+                .ifPresent(cobro -> {
+                    movimientos.delete(cobro);
+                    cierres.recalcularSiYaTermino(cobro.getFecha());
+                });
+    }
+
     /** Se usa al deshacer la llegada de un pedido marcado por error. */
     @Transactional
     public void eliminarPagoDePedido(Long pedidoId) {
@@ -73,9 +90,12 @@ public class CajaService {
     public LocalDate eliminar(Long id) {
         MovimientoCaja movimiento = movimientos.findById(id)
                 .orElseThrow(() -> new DatoInvalidoException("Ese movimiento ya no existe."));
+        // Si se borraran acá, el pedido quedaría "llegado" sin su pago o la libreta con un pago que no entró
         if (movimiento.getPedidoId() != null) {
-            // Si se borrara acá, el pedido quedaría como "llegó" sin su pago
             throw new DatoInvalidoException("Es el pago de un pedido: corregilo desde Pedidos con \"Deshacer\".");
+        }
+        if (movimiento.getTipo() == TipoMovimiento.COBRO_FIADO) {
+            throw new DatoInvalidoException("Es el cobro de un fiado: corregilo desde la libreta del cliente en Fiados.");
         }
         movimientos.delete(movimiento);
         cierres.recalcularSiYaTermino(movimiento.getFecha());

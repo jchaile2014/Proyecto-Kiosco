@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -57,6 +58,19 @@ public class Formatos {
 
     public String hora(LocalDateTime momento) {
         return momento.format(HORA);
+    }
+
+    /** "hoy", "ayer", "hace 12 días". */
+    public String haceCuanto(LocalDate fecha) {
+        long dias = ChronoUnit.DAYS.between(fecha, LocalDate.now(clock));
+        if (dias <= 0) {
+            return "hoy";
+        }
+        return dias == 1 ? "ayer" : "hace " + dias + " días";
+    }
+
+    public long diasDesde(LocalDate fecha) {
+        return ChronoUnit.DAYS.between(fecha, LocalDate.now(clock));
     }
 
     /** "24/09". */

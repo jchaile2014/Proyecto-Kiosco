@@ -15,6 +15,8 @@ public final class Montos {
     private static final Pattern MILES_CON_PUNTO = Pattern.compile("\\d{1,3}(\\.\\d{3})+");
     private static final Pattern ENTERO = Pattern.compile("\\d+");
     private static final Pattern DECIMALES = Pattern.compile("\\d{1,2}");
+    private static final Pattern PORCENTAJE = Pattern.compile("\\d{1,3}(\\.\\d{1,2})?");
+    private static final BigDecimal CIEN = new BigDecimal("100");
 
     private Montos() {
     }
@@ -39,6 +41,22 @@ public final class Montos {
             throw new MontoInvalidoException("Ese monto es demasiado grande.");
         }
         return monto;
+    }
+
+    /** "10", "2,5" o "10 %" → porcentaje entre 0 (sin incluir) y 100. */
+    public static BigDecimal parsePorcentaje(String texto) {
+        String limpio = texto == null ? "" : texto.replace("%", "").replaceAll("[\\s\\u00A0]", "").replace(',', '.');
+        if (limpio.isEmpty()) {
+            throw new MontoInvalidoException("Poné el porcentaje de interés, por ejemplo 10.");
+        }
+        if (!PORCENTAJE.matcher(limpio).matches()) {
+            throw new MontoInvalidoException("Escribí el porcentaje con números, por ejemplo 10 o 2,5.");
+        }
+        BigDecimal porcentaje = new BigDecimal(limpio);
+        if (porcentaje.signum() <= 0 || porcentaje.compareTo(CIEN) > 0) {
+            throw new MontoInvalidoException("El interés tiene que estar entre 0 y 100 %.");
+        }
+        return porcentaje;
     }
 
     /** Devuelve el número con punto decimal y sin separador de miles, listo para BigDecimal. */
