@@ -13,6 +13,7 @@ import org.kiosco.pedidos.Pedido;
 import org.kiosco.pedidos.PedidoRepository;
 import org.kiosco.pedidos.PedidoService;
 import org.kiosco.pedidos.Proveedor;
+import org.kiosco.productos.ProductoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -32,9 +33,9 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Con el perfil "demo" la app arranca con una base en memoria, dos meses de movimientos
- * inventados, algunos proveedores con pedidos y clientes con fiado. Sirve para probarla sin
- * instalar MySQL y para sacar capturas sin datos reales.
+ * Con el perfil "demo" la app arranca con una base en memoria y datos inventados: dos meses
+ * de movimientos, proveedores con pedidos, clientes con fiado y una lista de precios. Sirve
+ * para probarla sin instalar MySQL y para sacar capturas sin datos reales.
  */
 @Component
 @Profile("demo")
@@ -50,17 +51,19 @@ class DatosDemo implements ApplicationRunner {
     private final PedidoRepository pedidoRepository;
     private final FiadoService fiados;
     private final MovimientoFiadoRepository renglonesFiado;
+    private final ProductoService productos;
     private final Clock clock;
 
     DatosDemo(MovimientoCajaRepository movimientos, CajaService caja, PedidoService pedidos,
               PedidoRepository pedidoRepository, FiadoService fiados, MovimientoFiadoRepository renglonesFiado,
-              Clock clock) {
+              ProductoService productos, Clock clock) {
         this.movimientos = movimientos;
         this.caja = caja;
         this.pedidos = pedidos;
         this.pedidoRepository = pedidoRepository;
         this.fiados = fiados;
         this.renglonesFiado = renglonesFiado;
+        this.productos = productos;
         this.clock = clock;
     }
 
@@ -93,6 +96,7 @@ class DatosDemo implements ApplicationRunner {
         movimientos.saveAll(nuevos);
         cargarPedidos(azar, ahora.toLocalDate());
         cargarFiados(ahora.toLocalDate());
+        cargarProductos();
         log.info("Modo demo: {} movimientos de ejemplo cargados", movimientos.count());
     }
 
@@ -165,6 +169,14 @@ class DatosDemo implements ApplicationRunner {
                 pago(roberto, hoy, 4200));
         hoyPago.forEach(r -> r.saldar(hoy.atTime(9, 30)));
         renglonesFiado.saveAll(hoyPago);
+    }
+
+    private void cargarProductos() {
+        productos.guardar(null, "7790895000997", "Coca-Cola 2,25 L", new BigDecimal("3200"), true, 18, 6);
+        productos.guardar(null, "7790040613409", "Alfajor triple", new BigDecimal("1500"), true, 4, 5);
+        productos.guardar(null, "yerba", "Yerba 1 kg", new BigDecimal("4200"), true, 9, 3);
+        productos.guardar(null, "pan", "Pan por kilo", new BigDecimal("2500"), false, null, null);
+        productos.guardar(null, "hielo", "Bolsa de hielo 2 kg", new BigDecimal("1800"), false, null, null);
     }
 
     private MovimientoFiado llevo(Cliente cliente, LocalDate dia, String detalle, long monto) {

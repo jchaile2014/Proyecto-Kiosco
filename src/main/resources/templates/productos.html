@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina('Productos', ~{::main}, 'productos')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-3 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">Lista de precios</div>
+                    <h2 class="page-title">Productos</h2>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a class="btn btn-primary" th:href="@{/productos/nuevo}">
+                        <i class="ti ti-plus me-1" aria-hidden="true"></i>Nuevo producto
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <form class="mb-3" method="get" th:action="@{/productos}" role="search">
+                <div class="input-icon">
+                    <span class="input-icon-addon"><i class="ti ti-search" aria-hidden="true"></i></span>
+                    <input type="search" name="q" class="form-control" autocomplete="off" aria-label="Buscar producto"
+                           placeholder="Buscar por nombre o código" th:value="${busqueda}"
+                           hx-get="/productos" hx-trigger="input changed delay:300ms, search"
+                           hx-target="#panel-productos" hx-select="#panel-productos" hx-swap="outerHTML" hx-push-url="true">
+                </div>
+            </form>
+
+            <div id="panel-productos" th:fragment="panel">
+
+                <div class="alert alert-success alert-dismissible" role="status" th:if="${aviso != null}">
+                    <i class="ti ti-check me-2" aria-hidden="true"></i><span th:text="${aviso}"></span>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></a>
+                </div>
+                <div class="alert alert-warning" role="status" th:if="${avisoPocoStock != null}">
+                    <i class="ti ti-alert-triangle me-2" aria-hidden="true"></i><span th:text="${avisoPocoStock}"></span>
+                </div>
+
+                <div class="card">
+                    <div class="card-body text-center py-5" th:if="${productos.isEmpty() and busqueda.isBlank()}">
+                        <i class="ti ti-package d-block mb-2 icono-vacio text-secondary" aria-hidden="true"></i>
+                        <h3>Todavía no cargaste productos</h3>
+                        <p class="text-secondary mb-3">
+                            No hace falta: la caja funciona con montos. Cargalos si querés vender por código<br>
+                            (el precio se completa solo) o llevar la cuenta del stock de algunos.
+                        </p>
+                        <a class="btn btn-primary" th:href="@{/productos/nuevo}">Agregar el primero</a>
+                    </div>
+                    <div class="card-body text-secondary" th:if="${productos.isEmpty() and !busqueda.isBlank()}"
+                         th:text="|No hay productos que coincidan con “${busqueda}”.|">
+                    </div>
+                    <div class="table-responsive" th:unless="${productos.isEmpty()}">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th class="text-end">Precio</th>
+                                <th class="text-end">Stock</th>
+                                <th>Entró mercadería</th>
+                                <th class="w-1"><span class="visually-hidden">Editar</span></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="p : ${productos}">
+                                <td class="text-secondary font-monospace small" th:text="${p.codigo}">7790895000997</td>
+                                <td th:text="${p.nombre}">Coca-Cola 2,25 L</td>
+                                <td class="text-end monto" th:text="${@fmt.plata(p.precio)}">$ 3.200</td>
+                                <td class="text-end monto text-nowrap">
+                                    <th:block th:if="${p.controlaStock}">
+                                        <span th:classappend="${p.stock < 0} ? 'text-red'" th:text="${p.stock}">12</span>
+                                        <span class="badge bg-yellow-lt ms-1" th:if="${p.tienePocoStock()}">poco</span>
+                                    </th:block>
+                                    <span class="text-muted" th:unless="${p.controlaStock}" title="No lleva control de stock">—</span>
+                                </td>
+                                <td>
+                                    <form class="form-sumar" method="post" th:if="${p.controlaStock}"
+                                          th:action="@{/productos/{id}/sumar(id=${p.id})}"
+                                          th:attr="hx-post=@{/productos/{id}/sumar(id=${p.id})}"
+                                          hx-target="#panel-productos" hx-swap="outerHTML">
+                                        <input type="hidden" name="q" th:value="${busqueda}">
+                                        <div class="input-group input-group-sm has-validation"
+                                             th:with="conError=${productoConError == p.id}">
+                                            <input type="text" name="cantidad" inputmode="numeric" autocomplete="off"
+                                                   class="form-control" placeholder="Cant." aria-label="Cuántas unidades entraron"
+                                                   th:classappend="${conError} ? 'is-invalid'" th:autofocus="${conError}">
+                                            <button class="btn" type="submit"><i class="ti ti-plus me-1" aria-hidden="true"></i>Sumar</button>
+                                            <div class="invalid-feedback" th:if="${conError}" th:text="${errorSumar}"></div>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td>
+                                    <a class="btn btn-ghost-secondary btn-icon btn-sm" th:href="@{/productos/{id}(id=${p.id})}"
+                                       title="Editar producto" aria-label="Editar producto">
+                                        <i class="ti ti-pencil" aria-hidden="true"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

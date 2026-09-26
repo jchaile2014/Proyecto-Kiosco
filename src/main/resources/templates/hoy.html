@@ -30,6 +30,12 @@
         <div class="container-xl">
             <div id="panel-dia" th:fragment="panel">
 
+                <div class="alert alert-danger d-flex align-items-center" role="alert" th:if="${copiaFallida != null}">
+                    <i class="ti ti-database-off me-2" aria-hidden="true"></i>
+                    <span class="flex-fill" th:text="|La última copia de seguridad falló: ${copiaFallida}|">La última copia de seguridad falló.</span>
+                    <a class="btn btn-sm ms-2" th:href="@{/copias}">Ver copias</a>
+                </div>
+
                 <div class="alert alert-info d-flex align-items-center" role="status" th:if="${avisoPreventistas != null}">
                     <i class="ti ti-user-check me-2" aria-hidden="true"></i>
                     <span class="flex-fill" th:text="${avisoPreventistas}">Hoy viene el preventista de Coca-Cola.</span>
@@ -109,6 +115,28 @@
                                            th:field="*{monto}" th:classappend="${errorVenta != null} ? 'is-invalid'"
                                            th:autofocus="${errorGasto == null and pedidoConError == null}">
                                     <div class="invalid-feedback" th:if="${errorVenta != null}" th:text="${errorVenta}"></div>
+                                </div>
+                                <div class="row g-2 mb-3" th:unless="${productos.isEmpty()}">
+                                    <div class="col-8">
+                                        <label class="form-label" for="venta-codigo">
+                                            Código <span class="form-label-description">opcional</span>
+                                        </label>
+                                        <input id="venta-codigo" type="text" class="form-control" list="codigos-productos"
+                                               maxlength="40" autocomplete="off" placeholder="Escaneá o escribí el código"
+                                               th:field="*{codigo}">
+                                        <datalist id="codigos-productos">
+                                            <option th:each="p : ${productos}" th:value="${p.codigo}"
+                                                    th:text="|${p.nombre} · ${@fmt.plata(p.precio)}|"></option>
+                                        </datalist>
+                                    </div>
+                                    <div class="col-4">
+                                        <label class="form-label" for="venta-cantidad">Cantidad</label>
+                                        <input id="venta-cantidad" type="text" inputmode="numeric" class="form-control"
+                                               autocomplete="off" placeholder="1" th:field="*{cantidad}">
+                                    </div>
+                                    <div class="col-12">
+                                        <small class="form-hint">Con código podés dejar el monto vacío: se cobra el precio de la lista.</small>
+                                    </div>
                                 </div>
                                 <label class="form-label" for="venta-detalle">
                                     Detalle <span class="form-label-description">opcional</span>

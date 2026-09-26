@@ -4,12 +4,15 @@ import org.kiosco.caja.CajaService;
 import org.kiosco.caja.MovimientoCaja;
 import org.kiosco.cierre.CierreDiarioService;
 import org.kiosco.comun.DatoInvalidoException;
+import org.kiosco.copias.CopiaDeSeguridadService;
 import org.kiosco.comun.Formatos;
 import org.kiosco.comun.MontoInvalidoException;
 import org.kiosco.comun.Montos;
 import org.kiosco.pedidos.Pedido;
 import org.kiosco.pedidos.PedidoService;
 import org.kiosco.pedidos.Proveedor;
+import org.kiosco.productos.Producto;
+import org.kiosco.productos.ProductoService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
 
@@ -37,16 +41,24 @@ import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
 @Controller
 class HoyController {
 
+    /** EAN-8, UPC-A, EAN-13…: nadie escribe un monto de 8 dígitos o más sin puntos. */
+    private static final Pattern CODIGO_DE_BARRAS = Pattern.compile("\\d{8,14}");
+
     private final CajaService caja;
     private final CierreDiarioService cierres;
     private final PedidoService pedidos;
+    private final ProductoService productos;
+    private final CopiaDeSeguridadService copias;
     private final Formatos fmt;
     private final Clock clock;
 
-    HoyController(CajaService caja, CierreDiarioService cierres, PedidoService pedidos, Formatos fmt, Clock clock) {
+    HoyController(CajaService caja, CierreDiarioService cierres, PedidoService pedidos, ProductoService productos,
+                  CopiaDeSeguridadService copias, Formatos fmt, Clock clock) {
         this.caja = caja;
         this.cierres = cierres;
         this.pedidos = pedidos;
+        this.productos = productos;
+        this.copias = copias;
         this.fmt = fmt;
         this.clock = clock;
     }
@@ -66,16 +78,58 @@ class HoyController {
         LocalDate dia = fecha != null ? fecha : LocalDate.now(clock);
         boolean ok;
         try {
-            BigDecimal monto = Montos.parse(form.getMonto());
-            caja.registrarVenta(dia, monto, form.getDescripcion());
+            if (!form.tieneCodigo() && CODIGO_DE_BARRAS.matcher(textoOVacio(form.getMonto())).matches()
+                    && productos.existeCodigo(form.getMonto().strip())) {
+                // Se escaneó un código de barras en el campo del monto (donde está el cursor)
+                form.setCodigo(form.getMonto().strip());
+                form.setMonto(null);
+            }
+            if (form.tieneCodigo()) {
+                // Con código: sin monto se cobra el precio de lista y se descuenta el stock
+                BigDecimal monto = form.getMonto() == null || form.getMonto().isBlank() ? null : Montos.parse(form.getMonto());
+                ProductoService.VentaDeProducto venta = productos.vender(form.getCodigo(), leerCantidad(form.getCantidad()),
+                        dia, monto, form.getDescripcion());
+                model.addAttribute("avisoVenta", avisoDeVenta(venta));
+            } else {
+                BigDecimal monto = Montos.parse(form.getMonto());
+                caja.registrarVenta(dia, monto, form.getDescripcion());
+                model.addAttribute("avisoVenta", "Venta de " + fmt.plata(monto) + " anotada");
+            }
             model.addAttribute("ventaForm", new VentaForm());
-            model.addAttribute("avisoVenta", "Venta de " + fmt.plata(monto) + " anotada");
             ok = true;
         } catch (DatoInvalidoException e) {
             model.addAttribute("errorVenta", e.getMessage());
             ok = false;
         }
         return responder(dia, htmx != null, ok, model);
+    }
+
+    private static String textoOVacio(String texto) {
+        return texto == null ? "" : texto.strip();
+    }
+
+    private static int leerCantidad(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return 1;
+        }
+        try {
+            return Integer.parseInt(texto.strip());
+        } catch (NumberFormatException e) {
+            throw new DatoInvalidoException("La cantidad tiene que ser un número entero, por ejemplo 2.");
+        }
+    }
+
+    /** "Coca-Cola 2,25 L: $ 3.200 anotados. Quedan 11." */
+    private String avisoDeVenta(ProductoService.VentaDeProducto venta) {
+        Producto producto = venta.producto();
+        String aviso = venta.venta().getDetalle() + ": " + fmt.plata(venta.venta().getMonto()) + " anotados.";
+        if (!producto.isControlaStock()) {
+            return aviso;
+        }
+        if (producto.getStock() < 0) {
+            return aviso + " Ojo: el stock quedó en " + producto.getStock() + ", revisalo en Productos.";
+        }
+        return aviso + (producto.getStock() == 1 ? " Queda 1." : " Quedan " + producto.getStock() + ".");
     }
 
     @PostMapping("/movimientos/gasto")
@@ -151,6 +205,10 @@ class HoyController {
         model.addAttribute("totales", caja.totalesDel(dia));
         model.addAttribute("movimientos", caja.movimientosDel(dia));
         model.addAttribute("categorias", caja.categoriasDeGasto());
+        // El código de producto solo aparece si se cargó alguno: la caja funciona igual sin productos
+        model.addAttribute("productos", productos.buscar(""));
+        CopiaDeSeguridadService.Resultado ultimaCopia = copias.ultimoResultado();
+        model.addAttribute("copiaFallida", ultimaCopia != null && !ultimaCopia.ok() ? ultimaCopia.mensaje() : null);
         // Los avisos de pedidos solo tienen sentido en la caja de hoy
         model.addAttribute("pedidosParaHoy", esHoy ? pedidos.pendientesParaHoy() : List.of());
         model.addAttribute("avisoPreventistas", esHoy ? avisoPreventistas(pedidos.quienesVienenHoy()) : null);

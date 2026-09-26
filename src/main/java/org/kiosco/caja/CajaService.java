@@ -3,6 +3,7 @@ package org.kiosco.caja;
 import org.kiosco.cierre.CierreDiarioService;
 import org.kiosco.comun.DatoInvalidoException;
 import org.kiosco.comun.MontoPorNombre;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,11 +27,14 @@ public class CajaService {
 
     private final MovimientoCajaRepository movimientos;
     private final CierreDiarioService cierres;
+    private final ApplicationEventPublisher eventos;
     private final Clock clock;
 
-    public CajaService(MovimientoCajaRepository movimientos, CierreDiarioService cierres, Clock clock) {
+    public CajaService(MovimientoCajaRepository movimientos, CierreDiarioService cierres,
+                       ApplicationEventPublisher eventos, Clock clock) {
         this.movimientos = movimientos;
         this.cierres = cierres;
+        this.eventos = eventos;
         this.clock = clock;
     }
 
@@ -98,6 +102,7 @@ public class CajaService {
         if (movimiento.getTipo() == TipoMovimiento.COBRO_FIADO) {
             throw new DatoInvalidoException("Es el cobro de un fiado: corregilo desde la libreta del cliente en Fiados.");
         }
+        eventos.publishEvent(new MovimientoCajaEliminado(id));
         movimientos.delete(movimiento);
         cierres.recalcularSiYaTermino(movimiento.getFecha());
         return movimiento.getFecha();

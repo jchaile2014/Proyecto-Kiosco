@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina('Copias de seguridad', ~{::main}, 'copias')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-3 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">Tus datos</div>
+                    <h2 class="page-title">Copias de seguridad</h2>
+                </div>
+                <div class="col-auto ms-auto" th:if="${disponible}">
+                    <form method="post" th:action="@{/copias}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="ti ti-database-export me-1" aria-hidden="true"></i>Hacer una copia ahora
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="alert alert-success alert-dismissible" role="status" th:if="${aviso != null}">
+                <i class="ti ti-check me-2" aria-hidden="true"></i><span th:text="${aviso}"></span>
+                <a class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></a>
+            </div>
+            <div class="alert alert-danger" role="alert" th:if="${errorCopia != null}">
+                <div class="fw-bold mb-1">No se pudo hacer la copia</div>
+                <div class="font-monospace small" th:text="${errorCopia}"></div>
+            </div>
+
+            <div class="card mb-3" th:unless="${disponible}">
+                <div class="card-body">
+                    <i class="ti ti-info-circle me-1 text-blue" aria-hidden="true"></i>
+                    Estás en modo demo: la base es de prueba y se borra al cerrar, así que no se hacen copias.
+                </div>
+            </div>
+
+            <div class="row row-cards" th:if="${disponible}">
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Copias guardadas</h3>
+                            <div class="card-actions text-secondary small" th:text="${carpeta}">~/.kiosco/copias</div>
+                        </div>
+                        <div class="card-body text-secondary" th:if="${copias.isEmpty()}">
+                            Todavía no hay copias. Se hace una al abrir la app y otra a las 23:55 de cada día.
+                        </div>
+                        <table class="table table-vcenter card-table" th:unless="${copias.isEmpty()}">
+                            <thead>
+                            <tr>
+                                <th>Día</th>
+                                <th>Archivo</th>
+                                <th class="text-end">Tamaño</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="c : ${copias}">
+                                <td th:text="${@fmt.fechaLarga(c.fecha())}">Sábado 26 de septiembre</td>
+                                <td class="font-monospace small text-secondary" th:text="${c.nombreArchivo()}">kiosco-2026-09-26.sql.gz</td>
+                                <td class="text-end monto" th:text="${@fmt.bytes(c.bytes())}">48,2 KB</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="card mb-3" th:if="${ultimo != null}">
+                        <div class="card-body">
+                            <div class="subheader">Última copia de esta sesión</div>
+                            <div th:classappend="${ultimo.ok()} ? 'text-green' : 'text-red'">
+                                <i class="ti" th:classappend="${ultimo.ok()} ? 'ti-circle-check' : 'ti-alert-circle'" aria-hidden="true"></i>
+                                <span th:text="${ultimo.ok()} ? 'Salió bien' : 'Falló'">Salió bien</span>
+                                <span th:text="|el ${@fmt.fechaCorta(ultimo.cuando().toLocalDate())} a las ${@fmt.hora(ultimo.cuando())}|">el 26/09 a las 10:42</span>
+                            </div>
+                            <div class="small text-secondary mt-1" th:unless="${ultimo.ok()}" th:text="${ultimo.mensaje()}"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Cómo funciona</h3>
+                        </div>
+                        <div class="card-body">
+                            <p>Se hace una copia al abrir la app (si ese día todavía no había una) y otra a las 23:55. Se guardan las de los últimos 30 días.</p>
+                            <p class="mb-2">Para recuperar los datos de un día, en una terminal:</p>
+                            <pre class="mb-2"><code>gunzip &lt; kiosco-AAAA-MM-DD.sql.gz | mysql -u kiosco -p kiosco</code></pre>
+                            <p class="text-secondary small mb-0">
+                                Conviene copiar de vez en cuando la carpeta a un pendrive o a la nube: si se rompe el disco de la PC, las copias se pierden con él.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

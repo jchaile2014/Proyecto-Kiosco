@@ -234,3 +234,8 @@
     border-radius: 1px;
     background: var(--serie);
 }
+
+/* "Entró mercadería": un número chico y el botón */
+.form-sumar {
+    max-width: 11rem;
+}

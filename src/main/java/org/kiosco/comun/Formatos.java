@@ -71,6 +71,18 @@ public class Formatos {
         return parte.multiply(BigDecimal.valueOf(100)).divide(total, 0, RoundingMode.HALF_UP) + " %";
     }
 
+    /** Tamaño de archivo: "850 B", "12,3 KB", "1,5 MB". */
+    public String bytes(long bytes) {
+        DecimalFormat unDecimal = new DecimalFormat("#,##0.#", DecimalFormatSymbols.getInstance(ES_AR));
+        if (bytes < 1024) {
+            return bytes + " B";
+        }
+        if (bytes < 1024 * 1024) {
+            return unDecimal.format(bytes / 1024.0) + " KB";
+        }
+        return unDecimal.format(bytes / (1024.0 * 1024)) + " MB";
+    }
+
     /** "Septiembre 2026". */
     public String mes(YearMonth mes) {
         String texto = mes.format(MES_Y_ANIO);

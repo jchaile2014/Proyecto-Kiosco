@@ -40,3 +40,11 @@ document.addEventListener('click', (evento) => {
     fecha.setDate(fecha.getDate() + Number(dias));
     campo.value = fecha.toISOString().slice(0, 10);
 });
+
+// Una casilla con data-muestra="id" muestra u oculta esa sección (por ejemplo, los campos de stock).
+document.addEventListener('change', (evento) => {
+    const casilla = evento.target.closest('[data-muestra]');
+    if (casilla) {
+        document.getElementById(casilla.dataset.muestra).hidden = !casilla.checked;
+    }
+});
