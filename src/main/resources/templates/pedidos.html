@@ -48,7 +48,7 @@
                                         <span class="text-secondary" th:if="${p.diasPreventista.isEmpty()}">Sin día de preventista</span>
                                         <span class="text-secondary" th:unless="${p.diasPreventista.isEmpty()}"
                                               th:text="|Preventista: ${@fmt.dias(p.diasPreventista)}|">Preventista: martes y viernes</span>
-                                        <span class="badge bg-green-lt ms-1" th:if="${vieneHoy}">Viene hoy</span>
+                                        <span class="badge bg-dorado-lt ms-1" th:if="${vieneHoy}">Viene hoy</span>
                                     </div>
                                 </div>
                                 <div class="card-actions">
@@ -126,7 +126,7 @@
                                 </td>
                                 <td>
                                     <span class="badge"
-                                          th:classappend="${pe.atrasado(hoy)} ? 'bg-yellow-lt' : (${pe.fechaEstimada == null} ? 'bg-secondary-lt' : 'bg-blue-lt')"
+                                          th:classappend="${pe.atrasado(hoy)} ? 'bg-yellow-lt' : (${pe.fechaEstimada == null} ? 'bg-secondary-lt' : 'bg-primary-lt')"
                                           th:text="${pe.cuandoLlega(hoy)}">Llega mañana</span>
                                 </td>
                                 <td class="text-end monto text-secondary"
@@ -196,7 +196,7 @@
                    th:value="${conError} ? ${montoIngresado} : ''"
                    th:classappend="${conError} ? 'is-invalid'"
                    th:autofocus="${conError}">
-            <button class="btn btn-success" type="submit">
+            <button class="btn btn-primary" type="submit">
                 <i class="ti ti-check me-1" aria-hidden="true"></i>Llegó
             </button>
             <div class="invalid-feedback" th:if="${conError}" th:text="${errorLlegada}"></div>

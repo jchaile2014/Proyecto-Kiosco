@@ -62,7 +62,7 @@
                             <td>
                                 <a th:href="@{/resumenes/{a}/{m}(a=${m.mes().year},m=${m.mes().monthValue})}"
                                    th:text="${@fmt.mes(m.mes())}">Septiembre 2026</a>
-                                <span class="badge bg-blue-lt ms-1" th:if="${m.enCurso()}">lo que va</span>
+                                <span class="badge bg-primary-lt ms-1" th:if="${m.enCurso()}">lo que va</span>
                             </td>
                             <td class="text-end monto" th:text="${@fmt.plata(t.ventas())}">$ 1.950.000</td>
                             <td class="text-end monto" th:text="${@fmt.plata(t.pagosPedidos())}">$ 620.000</td>

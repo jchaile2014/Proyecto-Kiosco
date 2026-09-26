@@ -1,3 +1,119 @@
+/* ---------- Tema: morado y dorado ----------
+   Tabler arma sus tonos a partir de --tblr-primary: cambiándolo acá se tiñen botones,
+   enlaces, casillas y focos. El verde (entró) y el rojo (salió) se mantienen a propósito. */
+:root {
+    --kiosco-morado: #6d28d9;
+    --kiosco-morado-oscuro: #2a1150;
+    --kiosco-morado-noche: #170a2e;
+    --kiosco-dorado: #d9ad3c;
+    --kiosco-dorado-claro: #f0cd6b;
+    /* Dorado para texto sobre blanco: contraste 5,3:1 */
+    --kiosco-dorado-texto: #8a6508;
+    --kiosco-lavanda: #f5f2fb;
+    --kiosco-borde: #e8e1f3;
+    --kiosco-texto-suave: #857799;
+
+    --tblr-primary: var(--kiosco-morado);
+    --tblr-primary-rgb: 109, 40, 217;
+    --tblr-primary-fg: #ffffff;
+    --tblr-primary-lt-rgb: 240, 233, 251;
+    --tblr-link-color: var(--kiosco-morado);
+    --tblr-link-color-rgb: 109, 40, 217;
+    --tblr-body-bg: var(--kiosco-lavanda);
+    --tblr-border-radius: 8px;
+    --tblr-border-radius-lg: 14px;
+}
+
+/* Menú lateral: morado oscuro con el ítem activo en dorado */
+.navbar-vertical.navbar {
+    background: linear-gradient(180deg, var(--kiosco-morado-oscuro) 0%, var(--kiosco-morado-noche) 100%);
+    border-right: 0;
+}
+
+.navbar-vertical .navbar-brand {
+    color: #ffffff;
+    letter-spacing: .01em;
+}
+
+.navbar-vertical .navbar-brand .ti {
+    color: var(--kiosco-dorado-claro);
+}
+
+.navbar-vertical .navbar-nav .nav-link {
+    margin: 1px 0;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, .72);
+}
+
+.navbar-vertical .navbar-nav .nav-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, .06);
+}
+
+.navbar-vertical[class*=navbar-expand] .navbar-nav .nav-item.active > .nav-link {
+    color: var(--kiosco-dorado-claro);
+    background: rgba(217, 173, 60, .14);
+    box-shadow: inset 3px 0 0 var(--kiosco-dorado);
+}
+
+/* Encabezados y tarjetas */
+.page-pretitle {
+    color: var(--kiosco-morado);
+    font-weight: 600;
+    letter-spacing: .06em;
+}
+
+.page-title {
+    color: var(--kiosco-morado-oscuro);
+}
+
+.card {
+    --tblr-card-border-color: var(--kiosco-borde);
+    box-shadow: 0 1px 2px rgba(42, 17, 80, .04), 0 10px 24px -14px rgba(42, 17, 80, .18);
+}
+
+.card-header,
+.card-footer {
+    border-color: var(--kiosco-borde);
+}
+
+.card-footer {
+    background: #fbf9fe;
+}
+
+.subheader,
+.card-table thead th {
+    color: var(--kiosco-texto-suave);
+}
+
+.btn-primary {
+    box-shadow: 0 6px 14px -8px rgba(109, 40, 217, .8);
+}
+
+/* Botón dorado, para cuando entra plata de un fiado ("Ya pagó") */
+.btn-dorado {
+    --tblr-btn-color: var(--kiosco-morado-oscuro);
+    --tblr-btn-bg: var(--kiosco-dorado);
+    --tblr-btn-border-color: transparent;
+    --tblr-btn-hover-color: var(--kiosco-morado-oscuro);
+    --tblr-btn-hover-bg: #cc9f2f;
+    --tblr-btn-hover-border-color: transparent;
+    --tblr-btn-active-color: var(--kiosco-morado-oscuro);
+    --tblr-btn-active-bg: #bd9227;
+    --tblr-btn-active-border-color: transparent;
+    font-weight: 600;
+    box-shadow: 0 6px 14px -8px rgba(160, 118, 12, .9);
+}
+
+.text-dorado {
+    color: var(--kiosco-dorado-texto) !important;
+}
+
+.bg-dorado-lt {
+    background-color: rgba(217, 173, 60, .18) !important;
+    color: var(--kiosco-dorado-texto) !important;
+}
+
 /* Números alineados en columnas para que los montos se lean de un vistazo */
 .monto {
     font-variant-numeric: tabular-nums;
@@ -22,8 +138,8 @@
 
 /* Proveedor cuyo preventista viene hoy */
 .card-viene-hoy {
-    border-color: var(--tblr-green);
-    box-shadow: 0 0 0 1px var(--tblr-green);
+    border-color: var(--kiosco-dorado);
+    box-shadow: 0 0 0 1px var(--kiosco-dorado), 0 10px 24px -14px rgba(160, 118, 12, .5);
 }
 
 /* "Boleta + Llegó": ancho justo para un monto, alineado a la derecha */
@@ -34,10 +150,11 @@
 
 /* ---------- Gráficos de columnas (resúmenes) ----------
    Colores validados contra el fondo de las tarjetas (contraste y daltonismo):
-   serie 1 = Vendido, serie 2 = Pagado en pedidos. El color sigue a la serie en todos los gráficos. */
+   serie 1 = Vendido (morado), serie 2 = Pagado en pedidos (dorado oscuro, 3,25:1 sobre blanco).
+   El color sigue a la serie en todos los gráficos. */
 .grafico {
-    --serie-1: #2a78d6;
-    --serie-2: #eb6834;
+    --serie-1: #6d28d9;
+    --serie-2: #b8860b;
     --grafico-alto: 13rem;
     --grafico-eje: 4.5rem;
     margin: 0;

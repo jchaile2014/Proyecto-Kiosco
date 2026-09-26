@@ -36,7 +36,7 @@
                     <a class="btn btn-sm ms-2" th:href="@{/copias}">Ver copias</a>
                 </div>
 
-                <div class="alert alert-info d-flex align-items-center" role="status" th:if="${avisoPreventistas != null}">
+                <div class="alert alert-primary d-flex align-items-center" role="status" th:if="${avisoPreventistas != null}">
                     <i class="ti ti-user-check me-2" aria-hidden="true"></i>
                     <span class="flex-fill" th:text="${avisoPreventistas}">Hoy viene el preventista de Coca-Cola.</span>
                     <a class="btn btn-sm ms-2" th:href="@{/pedidos}">Ver qué pedirle</a>
@@ -103,7 +103,7 @@
                         <form class="card h-100" method="post" th:action="@{/movimientos/venta}" th:object="${ventaForm}"
                               hx-post="/movimientos/venta" hx-target="#panel-dia" hx-swap="outerHTML">
                             <div class="card-header">
-                                <h3 class="card-title"><i class="ti ti-shopping-cart text-green me-2" aria-hidden="true"></i>Anotar venta</h3>
+                                <h3 class="card-title"><i class="ti ti-shopping-cart text-primary me-2" aria-hidden="true"></i>Anotar venta</h3>
                             </div>
                             <div class="card-body">
                                 <input type="hidden" name="fecha" th:unless="${esHoy}" th:value="${fecha}">
@@ -148,7 +148,7 @@
                                 <span class="text-green small" th:if="${avisoVenta != null}">
                                     <i class="ti ti-check me-1" aria-hidden="true"></i><span th:text="${avisoVenta}"></span>
                                 </span>
-                                <button class="btn btn-success ms-auto" type="submit">
+                                <button class="btn btn-primary ms-auto" type="submit">
                                     <i class="ti ti-plus me-1" aria-hidden="true"></i>Anotar venta
                                 </button>
                             </div>
@@ -208,7 +208,7 @@
 
                 <div class="card mb-3" th:if="${!pedidosParaHoy.isEmpty() or avisoPedido != null}">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="ti ti-truck text-blue me-2" aria-hidden="true"></i>Pedidos por llegar</h3>
+                        <h3 class="card-title"><i class="ti ti-truck text-primary me-2" aria-hidden="true"></i>Pedidos por llegar</h3>
                         <div class="card-actions"><a class="small" th:href="@{/pedidos}">Ver todos</a></div>
                     </div>
                     <div class="card-body py-2" th:if="${avisoPedido != null}">
@@ -226,7 +226,7 @@
                                 </td>
                                 <td>
                                     <span class="badge"
-                                          th:classappend="${pe.atrasado(hoy)} ? 'bg-yellow-lt' : (${pe.fechaEstimada == null} ? 'bg-secondary-lt' : 'bg-blue-lt')"
+                                          th:classappend="${pe.atrasado(hoy)} ? 'bg-yellow-lt' : (${pe.fechaEstimada == null} ? 'bg-secondary-lt' : 'bg-primary-lt')"
                                           th:text="${pe.cuandoLlega(hoy)}">Llega hoy</span>
                                 </td>
                                 <td th:replace="~{pedidos :: form-llego(${pe}, '/hoy/pedidos/' + ${pe.id} + '/llego', '#panel-dia')}"></td>

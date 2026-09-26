@@ -118,7 +118,7 @@
             <tr th:each="d : ${p.dias()}" th:with="t=${d.totales()}">
                 <td>
                     <a th:href="@{/(fecha=${d.fecha()})}" th:text="${@fmt.fechaLarga(d.fecha())}">Lunes 21 de septiembre</a>
-                    <span class="badge bg-blue-lt ms-1" th:if="${d.fecha() == hoy}">hoy</span>
+                    <span class="badge bg-primary-lt ms-1" th:if="${d.fecha() == hoy}">hoy</span>
                 </td>
                 <td class="text-end monto" th:classappend="${t.ventas().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.ventas())}">$ 85.300</td>
                 <td class="text-end monto" th:classappend="${t.cobrosFiado().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.cobrosFiado())}">$ 0</td>

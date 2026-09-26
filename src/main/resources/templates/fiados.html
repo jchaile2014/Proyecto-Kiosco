@@ -24,7 +24,7 @@
                         <form class="card h-100" method="post" th:action="@{/fiados/anotar}" th:object="${fiadoForm}"
                               hx-post="/fiados/anotar" hx-target="#panel-fiados" hx-swap="outerHTML">
                             <div class="card-header">
-                                <h3 class="card-title"><i class="ti ti-pencil-plus text-orange me-2" aria-hidden="true"></i>Anotar fiado</h3>
+                                <h3 class="card-title"><i class="ti ti-pencil-plus text-dorado me-2" aria-hidden="true"></i>Anotar fiado</h3>
                             </div>
                             <div class="card-body">
                                 <div class="row g-2">
@@ -62,7 +62,7 @@
                             </div>
                             <div class="card-footer d-flex align-items-center">
                                 <span class="text-secondary small">Si es la primera vez que lleva fiado, se agrega solo a la lista.</span>
-                                <button class="btn btn-warning ms-auto" type="submit">
+                                <button class="btn btn-primary ms-auto" type="submit">
                                     <i class="ti ti-plus me-1" aria-hidden="true"></i>Anotar
                                 </button>
                             </div>
@@ -72,7 +72,7 @@
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="subheader">Te deben en total</div>
-                                <div class="h1 mb-1 text-orange" th:text="${@fmt.plata(totalEnLaCalle)}">$ 0</div>
+                                <div class="h1 mb-1 text-dorado" th:text="${@fmt.plata(totalEnLaCalle)}">$ 0</div>
                                 <div class="text-secondary small"
                                      th:text="${abiertas.size() == 1} ? '1 cliente con cuenta abierta' : |${abiertas.size()} clientes con cuenta abierta|">
                                 </div>
@@ -110,7 +110,7 @@
                                 <td class="text-secondary" th:text="${c.ultimoPago != null} ? ${@fmt.haceCuanto(c.ultimoPago)} : 'Todavía no pagó'">ayer</td>
                                 <td class="text-end monto fw-bold" th:text="${debe}">$ 12.300</td>
                                 <td class="text-nowrap">
-                                    <button type="button" class="btn btn-success btn-sm"
+                                    <button type="button" class="btn btn-dorado btn-sm"
                                             th:attr="hx-post=@{/fiados/{id}/pago-total(id=${c.cliente.id})},
                                                      hx-confirm=|¿${c.cliente.nombre} pagó los ${debe}? Entra a la caja de hoy y la cuenta queda en cero.|"
                                             hx-target="#panel-fiados" hx-swap="outerHTML">

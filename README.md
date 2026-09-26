@@ -76,7 +76,7 @@ La caja funciona con montos: los productos no hacen falta. Sirven para dos cosas
 |---|---|
 | Backend | Java 21, Spring Boot 4.1 (Web MVC, Data JPA, Validation, Security) |
 | Persistencia | Hibernate 7, MySQL 8, migraciones con Flyway, copias de seguridad con mysqldump |
-| Interfaz | Thymeleaf, HTMX 2, plantilla [Tabler](https://tabler.io) (Bootstrap 5), empaquetadas como WebJars |
+| Interfaz | Thymeleaf, HTMX 2, plantilla [Tabler](https://tabler.io) (Bootstrap 5) con un tema propio morado y dorado, empaquetadas como WebJars |
 | Tests | JUnit 5, AssertJ, MockMvc, Spring Security Test, H2 en modo MySQL |
 
 ## Decisiones de diseño
