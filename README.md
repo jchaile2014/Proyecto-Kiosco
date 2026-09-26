@@ -8,16 +8,28 @@ Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) 
 
 ## Qué hace
 
+### Caja del día
+
 - **Anotar una venta en segundos**: se escribe el monto y se aprieta Enter. Acepta `1500`, `1.500` o `1.500,50`.
 - **Anotar gastos** por categoría (panadero, verdulería, servicios…). Sugiere las categorías que ya se usaron.
 - **Totales del día**: cuánto entró, cuánto salió y el balance, actualizados al instante.
 - **Cierre de caja automático** a la medianoche. Si la PC estuvo apagada, los días pendientes se cierran al abrir la app.
 - **Días anteriores**: se pueden revisar y corregir (por ejemplo, un gasto que no se anotó), y el cierre de ese día se recalcula solo.
 
+### Pedidos a proveedores
+
+![Pantalla de pedidos](docs/captura-pedidos.png)
+
+- **Notas por proveedor**: durante la semana se anota lo que falta pedirle a cada uno.
+- **Días del preventista**: el día que viene, la pantalla principal lo avisa junto con lo que hay anotado para pedirle.
+- **Armar el pedido**: las notas pasan al pedido. La fecha de llegada y el monto son opcionales, porque muchas veces no se saben.
+- **"Llegó" con el monto de la boleta**: se marca desde la caja del día o desde Pedidos, y la boleta queda sola como salida de plata. Los pedidos atrasados se marcan en amarillo.
+- **Deshacer**: si se marcó por error, el pedido vuelve a pendiente y el pago se borra de la caja.
+
 ### Hoja de ruta
 
 - [x] Caja del día: ventas, gastos, balance y cierre automático
-- [ ] Pedidos a proveedores: notas de qué pedirle a cada uno, días de visita del preventista y "llegó" con el monto de la boleta
+- [x] Pedidos a proveedores: notas de qué pedirle a cada uno, días del preventista y "llegó" con el monto de la boleta
 - [ ] Fiados: libreta por cliente con saldo acumulado e interés a pedido
 - [ ] Resúmenes: últimos 7 días y mes por mes, con gráficos
 - [ ] Productos con stock opcional, backup automático e ícono de escritorio
@@ -38,6 +50,7 @@ Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) 
 - **El cierre diario es una foto guardada** (`cierre_diario`). El historial mensual queda armado de antemano y no hay que recalcular meses enteros cada vez.
 - **El reloj se inyecta** (`java.time.Clock`). Así los tests pueden simular que pasan los días, por ejemplo la PC apagada tres días, sin esperar a la medianoche.
 - **Seguridad pensada para uso local.** El servidor solo escucha en `127.0.0.1`. La protección CSRF evita que otra página abierta en el navegador cargue o borre movimientos. El token va en una cookie para que la pantalla, que queda abierta todo el día, siga funcionando aunque la app se reinicie.
+- **Módulos que no se pisan.** `caja` no conoce a `pedidos`: los pedidos anotan su pago a través del servicio de caja, y la pantalla `hoy` es la única que junta las dos cosas. El pago de una boleta queda enlazado a su pedido y solo se puede deshacer desde ahí, para que nunca quede un pedido "llegado" sin su pago.
 - **Todo se renderiza en el servidor, con HTMX.** Los formularios actualizan solo el panel del día, sin recargar la página y sin mantener una SPA aparte. Los formularios de carga funcionan igual sin JavaScript.
 
 ## Probarla sin instalar MySQL (modo demo)
@@ -70,19 +83,24 @@ Las tablas se crean solas la primera vez gracias a Flyway. En lugar del archivo 
 mvn test
 ```
 
-Cubren tres cosas:
+Cubren cuatro cosas:
 
 - La lectura de montos escritos a la argentina.
-- El cierre automático: días con la PC apagada, correcciones de días ya cerrados y fechas futuras.
+- El cierre automático: días con la PC apagada, correcciones de días ya cerrados, días salteados y fechas futuras.
+- Las reglas de pedidos: notas que pasan al pedido, boleta que sale de la caja, deshacer y cancelar, y qué pedidos mostrar en la caja de hoy.
 - Las pantallas con MockMvc: carga con HTMX, errores de validación, redirección sin JavaScript y rechazo de pedidos sin token CSRF.
+
+Los tests de pantallas no corren dentro de una transacción, igual que la app real, donde cada pedido HTTP tiene la suya. Así aparecen los errores de carga diferida de Hibernate que un test transaccional escondería. Las migraciones también se probaron contra un MySQL 8 real, incluida la actualización de la versión 1 a la 2.
 
 ## Estructura
 
 ```
 src/main/java/org/kiosco/
-├── caja/      libro de caja: movimientos, totales y la pantalla "Hoy"
+├── caja/      libro de caja: movimientos y totales
 ├── cierre/    cierre diario automático
-├── comun/     lectura y formato de montos y fechas
+├── hoy/       pantalla principal: junta caja, pedidos y avisos del día
+├── pedidos/   proveedores, notas de qué pedir y pedidos
+├── comun/     montos, fechas y manejo de errores
 ├── config/    seguridad y reloj
 └── demo/      datos de ejemplo del modo demo
 src/main/resources/

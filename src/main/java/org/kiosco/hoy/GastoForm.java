@@ -1,4 +1,4 @@
-package org.kiosco.caja;
+package org.kiosco.hoy;
 
 /** Lo que llega del formulario "Anotar gasto". */
 public class GastoForm {

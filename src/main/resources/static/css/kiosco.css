@@ -10,3 +10,24 @@
 .navbar-brand {
     font-size: 1.15rem;
 }
+
+/* Lo que se pidió, un renglón por cosa; en la tabla se muestran hasta 3 renglones */
+.detalle-pedido {
+    white-space: pre-line;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Proveedor cuyo preventista viene hoy */
+.card-viene-hoy {
+    border-color: var(--tblr-green);
+    box-shadow: 0 0 0 1px var(--tblr-green);
+}
+
+/* "Boleta + Llegó": ancho justo para un monto, alineado a la derecha */
+.form-llego {
+    max-width: 18rem;
+    margin-left: auto;
+}

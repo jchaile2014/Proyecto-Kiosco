@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class CierreDiarioService {
@@ -32,15 +34,17 @@ public class CierreDiarioService {
     @Transactional
     public int cerrarDiasPendientes() {
         LocalDate hoy = LocalDate.now(clock);
-        LocalDate desde = cierres.findTopByOrderByFechaDesc()
-                .map(ultimo -> ultimo.getFecha().plusDays(1))
-                .or(movimientos::primeraFecha)
-                .orElse(hoy);
+        LocalDate desde = movimientos.primeraFecha().orElse(hoy);
+        // Se buscan todos los huecos, no solo "desde el último cierre": una corrección en un
+        // día viejo puede haber generado su cierre antes que el de los días anteriores.
+        Set<LocalDate> yaCerrados = new HashSet<>(cierres.fechasCerradasEntre(desde, hoy));
 
         int cerrados = 0;
         for (LocalDate dia = desde; dia.isBefore(hoy); dia = dia.plusDays(1)) {
-            cerrar(dia);
-            cerrados++;
+            if (!yaCerrados.contains(dia)) {
+                cerrar(dia);
+                cerrados++;
+            }
         }
         return cerrados;
     }

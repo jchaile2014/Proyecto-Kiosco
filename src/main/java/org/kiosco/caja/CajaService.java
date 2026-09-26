@@ -48,11 +48,35 @@ public class CajaService {
         return registrar(fecha, TipoMovimiento.GASTO, monto, limpiar(descripcion, 200), conMayuscula);
     }
 
+    /** Anota la salida de plata por la boleta de un pedido que llegó. */
+    @Transactional
+    public MovimientoCaja registrarPagoDePedido(LocalDate fecha, BigDecimal monto, String descripcion, Long pedidoId) {
+        validar(fecha, monto);
+        MovimientoCaja pago = new MovimientoCaja(fecha, LocalDateTime.now(clock),
+                monto.setScale(2, RoundingMode.HALF_UP), limpiar(descripcion, 200), pedidoId);
+        movimientos.save(pago);
+        cierres.recalcularSiYaTermino(fecha);
+        return pago;
+    }
+
+    /** Se usa al deshacer la llegada de un pedido marcado por error. */
+    @Transactional
+    public void eliminarPagoDePedido(Long pedidoId) {
+        movimientos.findByPedidoId(pedidoId).ifPresent(pago -> {
+            movimientos.delete(pago);
+            cierres.recalcularSiYaTermino(pago.getFecha());
+        });
+    }
+
     /** Borra un movimiento cargado por error y devuelve el día al que pertenecía. */
     @Transactional
     public LocalDate eliminar(Long id) {
         MovimientoCaja movimiento = movimientos.findById(id)
                 .orElseThrow(() -> new DatoInvalidoException("Ese movimiento ya no existe."));
+        if (movimiento.getPedidoId() != null) {
+            // Si se borrara acá, el pedido quedaría como "llegó" sin su pago
+            throw new DatoInvalidoException("Es el pago de un pedido: corregilo desde Pedidos con \"Deshacer\".");
+        }
         movimientos.delete(movimiento);
         cierres.recalcularSiYaTermino(movimiento.getFecha());
         return movimiento.getFecha();
@@ -86,17 +110,21 @@ public class CajaService {
 
     private MovimientoCaja registrar(LocalDate fecha, TipoMovimiento tipo, BigDecimal monto,
                                      String descripcion, String categoria) {
+        validar(fecha, monto);
+        MovimientoCaja movimiento = new MovimientoCaja(fecha, LocalDateTime.now(clock), tipo,
+                monto.setScale(2, RoundingMode.HALF_UP), descripcion, categoria);
+        movimientos.save(movimiento);
+        cierres.recalcularSiYaTermino(fecha);
+        return movimiento;
+    }
+
+    private void validar(LocalDate fecha, BigDecimal monto) {
         if (fecha.isAfter(LocalDate.now(clock))) {
             throw new DatoInvalidoException("No se puede anotar en un día que todavía no llegó.");
         }
         if (monto == null || monto.signum() <= 0) {
             throw new DatoInvalidoException("El monto tiene que ser mayor a cero.");
         }
-        MovimientoCaja movimiento = new MovimientoCaja(fecha, LocalDateTime.now(clock), tipo,
-                monto.setScale(2, RoundingMode.HALF_UP), descripcion, categoria);
-        movimientos.save(movimiento);
-        cierres.recalcularSiYaTermino(fecha);
-        return movimiento;
     }
 
     private static String limpiar(String texto, int largoMaximo) {

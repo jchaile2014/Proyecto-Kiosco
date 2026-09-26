@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina('Armar pedido', ~{::main}, 'pedidos')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="page-pretitle">Armar pedido</div>
+            <h2 class="page-title" th:text="${proveedor.nombre}">Coca-Cola</h2>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row">
+                <div class="col-lg-8">
+                    <form class="card" method="post" th:action="@{/pedidos/nuevo(proveedor=${proveedor.id})}" th:object="${pedidoForm}">
+                        <div class="card-body">
+                            <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}"></div>
+
+                            <div class="mb-4">
+                                <label class="form-label" for="detalle">
+                                    Qué se pidió <span class="form-label-description">opcional</span>
+                                </label>
+                                <textarea id="detalle" class="form-control" rows="6" maxlength="1000"
+                                          placeholder="Una cosa por renglón" th:field="*{detalle}"></textarea>
+                                <small class="form-hint" th:unless="${proveedor.notas.isEmpty()}">
+                                    Se completó con lo que tenías anotado. Al guardar, esas notas se borran porque ya pasan al pedido.
+                                </small>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-7">
+                                    <label class="form-label" for="fechaEstimada">
+                                        Cuándo llega <span class="form-label-description">opcional</span>
+                                    </label>
+                                    <input id="fechaEstimada" type="date" class="form-control mb-2"
+                                           th:field="*{fechaEstimada}" th:min="${hoy}">
+                                    <div class="btn-list" data-campo="fechaEstimada" th:attr="data-hoy=${hoy}">
+                                        <button type="button" class="btn btn-sm" data-poner-fecha="1">Mañana</button>
+                                        <button type="button" class="btn btn-sm" data-poner-fecha="2">Pasado mañana</button>
+                                        <button type="button" class="btn btn-sm" data-poner-fecha="">No sé</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label" for="montoEstimado">
+                                        Monto aproximado <span class="form-label-description">opcional</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input id="montoEstimado" type="text" inputmode="decimal" autocomplete="off"
+                                               class="form-control monto" placeholder="45.000" th:field="*{montoEstimado}">
+                                    </div>
+                                    <small class="form-hint">El monto real lo cargás cuando llega la boleta.</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex gap-2">
+                            <a class="btn" th:href="@{/pedidos}">Volver</a>
+                            <button class="btn btn-primary ms-auto" type="submit">
+                                <i class="ti ti-check me-1" aria-hidden="true"></i>Guardar pedido
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina(${titulo}, ~{::main}, 'pedidos')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="page-pretitle">Proveedores</div>
+            <h2 class="page-title" th:text="${titulo}">Nuevo proveedor</h2>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row">
+                <div class="col-lg-8">
+                    <form class="card" method="post" th:object="${proveedorForm}"
+                          th:action="${proveedorId == null} ? @{/proveedores} : @{/proveedores/{id}(id=${proveedorId})}">
+                        <div class="card-body">
+                            <div class="alert alert-danger" role="alert" th:if="${error != null}" th:text="${error}"></div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-7">
+                                    <label class="form-label required" for="nombre">Nombre</label>
+                                    <input id="nombre" type="text" class="form-control" maxlength="80" autocomplete="off"
+                                           placeholder="Distribuidora Sur" th:field="*{nombre}" autofocus>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label" for="telefono">
+                                        Teléfono <span class="form-label-description">opcional</span>
+                                    </label>
+                                    <input id="telefono" type="tel" class="form-control" maxlength="40" autocomplete="off"
+                                           placeholder="11 5555-1234" th:field="*{telefono}">
+                                </div>
+                            </div>
+
+                            <div class="form-label">Qué días pasa el preventista</div>
+                            <div class="form-selectgroup">
+                                <!--/* Sin th:field: su campo oculto "_dias" separa la casilla de su etiqueta y Tabler no la pinta */-->
+                                <label class="form-selectgroup-item" th:each="d : ${diasSemana}">
+                                    <input type="checkbox" class="form-selectgroup-input" name="dias"
+                                           th:value="${d}" th:checked="${proveedorForm.dias.contains(d)}">
+                                    <span class="form-selectgroup-label" th:text="${@fmt.diaCorto(d)}">Lun</span>
+                                </label>
+                            </div>
+                            <small class="form-hint mt-2">
+                                Esos días te avisa en la pantalla Hoy, con lo que tenés anotado para pedirle.
+                            </small>
+                        </div>
+                        <div class="card-footer d-flex gap-2">
+                            <a class="btn" th:href="@{/pedidos}">Volver</a>
+                            <button class="btn btn-primary ms-auto" type="submit">
+                                <i class="ti ti-check me-1" aria-hidden="true"></i>Guardar
+                            </button>
+                        </div>
+                    </form>
+
+                    <form class="mt-3 text-end" method="post" th:if="${proveedorId != null}"
+                          th:action="@{/proveedores/{id}/baja(id=${proveedorId})}"
+                          onsubmit="return confirm('¿Sacar este proveedor de la lista? Sus pedidos anteriores se conservan.')">
+                        <button class="btn btn-ghost-danger" type="submit">
+                            <i class="ti ti-trash me-1" aria-hidden="true"></i>Sacar de la lista de proveedores
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -78,6 +78,18 @@ class CierreDiarioServiceTest {
     }
 
     @Test
+    void unaCorreccionEnUnDiaViejoNoHaceQueSeSalteenLosDiasAnteriores() {
+        caja.registrarVenta(DIA_20, new BigDecimal("1000"), null);
+        reloj.fijar(DIA_23.atTime(9, 0));
+        // Se corrige el 22 antes de que corra el cierre automático: eso ya genera el cierre del 22
+        caja.registrarGasto(LocalDate.of(2026, 9, 22), new BigDecimal("200"), "Otros", null);
+
+        assertThat(cierres.cerrarDiasPendientes()).as("faltaban el 20 y el 21").isEqualTo(2);
+        assertThat(cierres.cierreDel(DIA_20).orElseThrow().getVentas()).isEqualByComparingTo("1000");
+        assertThat(cierres.cierreDel(DIA_21)).isPresent();
+    }
+
+    @Test
     void noDejaAnotarEnDiasQueTodaviaNoLlegaron() {
         assertThatThrownBy(() -> caja.registrarVenta(DIA_21, new BigDecimal("100"), null))
                 .isInstanceOf(DatoInvalidoException.class);

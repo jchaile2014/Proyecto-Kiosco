@@ -23,3 +23,20 @@ document.addEventListener('change', (evento) => {
         window.location = '/?fecha=' + campo.value;
     }
 });
+
+// Botones "Mañana", "Pasado mañana" y "No sé" del formulario de pedido.
+document.addEventListener('click', (evento) => {
+    const boton = evento.target.closest('[data-poner-fecha]');
+    if (!boton) {
+        return;
+    }
+    const campo = document.getElementById(boton.parentElement.dataset.campo);
+    const dias = boton.dataset.ponerFecha;
+    if (dias === '') {
+        campo.value = '';
+        return;
+    }
+    const fecha = new Date(boton.parentElement.dataset.hoy + 'T12:00:00');
+    fecha.setDate(fecha.getDate() + Number(dias));
+    campo.value = fecha.toISOString().slice(0, 10);
+});

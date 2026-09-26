@@ -6,9 +6,13 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -21,6 +25,7 @@ public class Formatos {
     private static final DateTimeFormatter DIA = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", ES_AR);
     private static final DateTimeFormatter DIA_CON_ANIO = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy", ES_AR);
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter FECHA_CORTA = DateTimeFormatter.ofPattern("dd/MM");
 
     private final Clock clock;
 
@@ -52,5 +57,34 @@ public class Formatos {
 
     public String hora(LocalDateTime momento) {
         return momento.format(HORA);
+    }
+
+    /** "24/09". */
+    public String fechaCorta(LocalDate fecha) {
+        return fecha.format(FECHA_CORTA);
+    }
+
+    /** {MARTES, VIERNES} → "martes y viernes". */
+    public String dias(Collection<DayOfWeek> dias) {
+        return enumerar(dias.stream().sorted().map(this::dia).toList());
+    }
+
+    /** "lunes"; en minúscula, como va en medio de una oración. */
+    public String dia(DayOfWeek dia) {
+        return dia.getDisplayName(TextStyle.FULL, ES_AR);
+    }
+
+    /** "Lun", para botones chicos. */
+    public String diaCorto(DayOfWeek dia) {
+        String corto = dia.getDisplayName(TextStyle.SHORT, ES_AR).replace(".", "");
+        return Character.toUpperCase(corto.charAt(0)) + corto.substring(1);
+    }
+
+    /** ["a", "b", "c"] → "a, b y c". */
+    public String enumerar(List<String> partes) {
+        if (partes.size() <= 1) {
+            return String.join("", partes);
+        }
+        return String.join(", ", partes.subList(0, partes.size() - 1)) + " y " + partes.getLast();
     }
 }

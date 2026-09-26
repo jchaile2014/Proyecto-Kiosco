@@ -48,6 +48,10 @@ public class MovimientoCaja {
     @Column(length = 60)
     private String categoria;
 
+    /** Si es el pago de la boleta de un pedido, cuál. */
+    @Column(name = "pedido_id")
+    private Long pedidoId;
+
     protected MovimientoCaja() {
     }
 
@@ -59,6 +63,11 @@ public class MovimientoCaja {
         this.monto = monto;
         this.descripcion = descripcion;
         this.categoria = categoria;
+    }
+
+    MovimientoCaja(LocalDate fecha, LocalDateTime registradoEn, BigDecimal monto, String descripcion, Long pedidoId) {
+        this(fecha, registradoEn, TipoMovimiento.PAGO_PEDIDO, monto, descripcion, null);
+        this.pedidoId = pedidoId;
     }
 
     /** Texto para mostrar en listas: la categoría del gasto y/o el detalle que se anotó. */
@@ -98,5 +107,9 @@ public class MovimientoCaja {
 
     public String getCategoria() {
         return categoria;
+    }
+
+    public Long getPedidoId() {
+        return pedidoId;
     }
 }

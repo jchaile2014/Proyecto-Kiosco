@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina('Pedidos', ~{::main}, 'pedidos')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-3 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">Proveedores y mercadería</div>
+                    <h2 class="page-title">Pedidos</h2>
+                </div>
+                <div class="col-auto ms-auto">
+                    <a class="btn btn-primary" th:href="@{/proveedores/nuevo}">
+                        <i class="ti ti-plus me-1" aria-hidden="true"></i>Nuevo proveedor
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div id="panel-pedidos" th:fragment="panel">
+
+                <div class="alert alert-success alert-dismissible" role="status" th:if="${aviso != null}">
+                    <i class="ti ti-check me-2" aria-hidden="true"></i><span th:text="${aviso}"></span>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></a>
+                </div>
+
+                <div class="card mb-4" th:if="${proveedores.isEmpty()}">
+                    <div class="card-body text-center py-5">
+                        <i class="ti ti-truck d-block mb-2 icono-vacio text-secondary" aria-hidden="true"></i>
+                        <h3>Empezá cargando tus proveedores</h3>
+                        <p class="text-secondary">De cada uno podés anotar qué días pasa el preventista y lo que te falta pedirle.</p>
+                        <a class="btn btn-primary" th:href="@{/proveedores/nuevo}">Agregar el primero</a>
+                    </div>
+                </div>
+
+                <h3 class="mb-3" th:unless="${proveedores.isEmpty()}">Qué pedirle a cada uno</h3>
+                <div class="row row-cards mb-4" th:unless="${proveedores.isEmpty()}">
+                    <div class="col-md-6 col-xl-4" th:each="p : ${proveedores}" th:with="vieneHoy=${p.vieneEl(hoy.dayOfWeek)}">
+                        <div class="card h-100" th:classappend="${vieneHoy} ? 'card-viene-hoy'">
+                            <div class="card-header">
+                                <div>
+                                    <h3 class="card-title" th:text="${p.nombre}">Coca-Cola</h3>
+                                    <div class="small mt-1">
+                                        <span class="text-secondary" th:if="${p.diasPreventista.isEmpty()}">Sin día de preventista</span>
+                                        <span class="text-secondary" th:unless="${p.diasPreventista.isEmpty()}"
+                                              th:text="|Preventista: ${@fmt.dias(p.diasPreventista)}|">Preventista: martes y viernes</span>
+                                        <span class="badge bg-green-lt ms-1" th:if="${vieneHoy}">Viene hoy</span>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <a class="btn btn-ghost-secondary btn-icon btn-sm" th:href="@{/proveedores/{id}(id=${p.id})}"
+                                       title="Editar proveedor" aria-label="Editar proveedor">
+                                        <i class="ti ti-pencil" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-3" th:unless="${p.notas.isEmpty()}">
+                                    <li class="d-flex align-items-center border-bottom py-1" th:each="n : ${p.notas}">
+                                        <i class="ti ti-point text-secondary me-1" aria-hidden="true"></i>
+                                        <span class="flex-fill" th:text="${n.texto}">Sprite 2,25 L x6</span>
+                                        <button type="button" class="btn btn-ghost-secondary btn-icon btn-sm"
+                                                th:attr="hx-post=@{/pedidos/proveedores/{p}/notas/{n}/borrar(p=${p.id},n=${n.id})}"
+                                                hx-target="#panel-pedidos" hx-swap="outerHTML"
+                                                title="Ya no hace falta" aria-label="Borrar nota">
+                                            <i class="ti ti-x" aria-hidden="true"></i>
+                                        </button>
+                                    </li>
+                                </ul>
+                                <p class="text-secondary small" th:if="${p.notas.isEmpty()}">No hay nada anotado para pedirle.</p>
+                                <form method="post" th:action="@{/pedidos/proveedores/{id}/notas(id=${p.id})}"
+                                      th:attr="hx-post=@{/pedidos/proveedores/{id}/notas(id=${p.id})}"
+                                      hx-target="#panel-pedidos" hx-swap="outerHTML">
+                                    <div class="input-group input-group-sm has-validation"
+                                         th:with="conError=${proveedorEnfocado == p.id and errorNota != null}">
+                                        <input type="text" name="texto" class="form-control" maxlength="120" autocomplete="off"
+                                               placeholder="Anotar algo que falta" aria-label="Anotar algo que falta"
+                                               th:value="${conError} ? ${textoNota} : ''"
+                                               th:classappend="${conError} ? 'is-invalid'"
+                                               th:autofocus="${proveedorEnfocado == p.id}">
+                                        <button class="btn" type="submit" aria-label="Agregar nota">
+                                            <i class="ti ti-plus" aria-hidden="true"></i>
+                                        </button>
+                                        <div class="invalid-feedback" th:if="${conError}" th:text="${errorNota}"></div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="card-footer">
+                                <a class="btn w-100" th:classappend="${vieneHoy} ? 'btn-primary' : 'btn-outline-primary'"
+                                   th:href="@{/pedidos/nuevo(proveedor=${p.id})}">
+                                    <i class="ti ti-clipboard-list me-1" aria-hidden="true"></i>Armar pedido
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Pendientes de llegar</h3>
+                    </div>
+                    <div class="card-body text-secondary" th:if="${pendientes.isEmpty()}">
+                        No hay pedidos esperando. Cuando armes uno, aparece acá.
+                    </div>
+                    <div class="table-responsive" th:unless="${pendientes.isEmpty()}">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                            <tr>
+                                <th>Proveedor</th>
+                                <th>Cuándo</th>
+                                <th class="text-end">Aproximado</th>
+                                <th>Cuando llegue, poné el monto de la boleta</th>
+                                <th class="w-1"><span class="visually-hidden">Cancelar</span></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="pe : ${pendientes}">
+                                <td>
+                                    <div class="fw-medium" th:text="${pe.proveedor.nombre}">Distribuidora Sur</div>
+                                    <div class="text-secondary small detalle-pedido" th:text="${pe.detalle ?: 'Sin detalle'}">Galletitas</div>
+                                    <div class="text-secondary small" th:text="|Pedido el ${@fmt.fechaCorta(pe.fechaPedido)}|">Pedido el 24/09</div>
+                                </td>
+                                <td>
+                                    <span class="badge"
+                                          th:classappend="${pe.atrasado(hoy)} ? 'bg-yellow-lt' : (${pe.fechaEstimada == null} ? 'bg-secondary-lt' : 'bg-blue-lt')"
+                                          th:text="${pe.cuandoLlega(hoy)}">Llega mañana</span>
+                                </td>
+                                <td class="text-end monto text-secondary"
+                                    th:text="${pe.montoEstimado != null} ? ${@fmt.plata(pe.montoEstimado)} : '—'">$ 45.000</td>
+                                <td th:replace="~{:: form-llego(${pe}, '/pedidos/' + ${pe.id} + '/llego', '#panel-pedidos')}"></td>
+                                <td>
+                                    <button type="button" class="btn btn-ghost-secondary btn-icon btn-sm"
+                                            th:attr="hx-post=@{/pedidos/{id}/cancelar(id=${pe.id})}"
+                                            hx-target="#panel-pedidos" hx-swap="outerHTML"
+                                            hx-confirm="¿Cancelar este pedido? Deja de figurar como pendiente."
+                                            title="Cancelar pedido" aria-label="Cancelar pedido">
+                                        <i class="ti ti-x" aria-hidden="true"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" th:unless="${llegados.isEmpty()}">
+                    <div class="card-header">
+                        <h3 class="card-title">Llegaron hace poco</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                            <tr>
+                                <th>Proveedor</th>
+                                <th>Llegó</th>
+                                <th class="text-end">Boleta</th>
+                                <th class="w-1"><span class="visually-hidden">Deshacer</span></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="l : ${llegados}">
+                                <td th:text="${l.proveedor.nombre}">Coca-Cola</td>
+                                <td class="text-secondary" th:text="${l.fechaLlegada == hoy} ? 'Hoy' : ${@fmt.fechaCorta(l.fechaLlegada)}">Hoy</td>
+                                <td class="text-end monto text-red" th:text="${@fmt.plataConSigno(l.montoBoleta, false)}">− $ 28.400</td>
+                                <td>
+                                    <button type="button" class="btn btn-ghost-secondary btn-sm"
+                                            th:attr="hx-post=@{/pedidos/{id}/deshacer(id=${l.id})}"
+                                            hx-target="#panel-pedidos" hx-swap="outerHTML"
+                                            hx-confirm="¿Deshacer? El pedido vuelve a pendiente y se borra el pago de la caja."
+                                            title="Lo marqué por error">
+                                        <i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Deshacer
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Celda con el formulario "llegó + monto de la boleta"; también la usa la pantalla Hoy -->
+<td th:fragment="form-llego(pedido, accion, destino)">
+    <form class="form-llego" method="post" th:action="${accion}" th:attr="hx-post=${accion},hx-target=${destino}" hx-swap="outerHTML">
+        <div class="input-group input-group-sm has-validation" th:with="conError=${pedidoConError == pedido.id}">
+            <span class="input-group-text">$</span>
+            <input type="text" name="montoBoleta" inputmode="decimal" autocomplete="off" class="form-control monto"
+                   placeholder="Boleta" aria-label="Monto de la boleta"
+                   th:value="${conError} ? ${montoIngresado} : ''"
+                   th:classappend="${conError} ? 'is-invalid'"
+                   th:autofocus="${conError}">
+            <button class="btn btn-success" type="submit">
+                <i class="ti ti-check me-1" aria-hidden="true"></i>Llegó
+            </button>
+            <div class="invalid-feedback" th:if="${conError}" th:text="${errorLlegada}"></div>
+        </div>
+    </form>
+</td>
+</body>
+</html>

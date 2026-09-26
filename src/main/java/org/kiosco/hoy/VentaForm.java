@@ -1,4 +1,4 @@
-package org.kiosco.caja;
+package org.kiosco.hoy;
 
 /** Lo que llega del formulario "Anotar venta". El monto viene como texto para aceptar "1.500,50". */
 public class VentaForm {

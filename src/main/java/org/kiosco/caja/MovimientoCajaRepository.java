@@ -12,6 +12,8 @@ public interface MovimientoCajaRepository extends JpaRepository<MovimientoCaja, 
 
     List<MovimientoCaja> findByFechaOrderByRegistradoEnDescIdDesc(LocalDate fecha);
 
+    Optional<MovimientoCaja> findByPedidoId(Long pedidoId);
+
     @Query("""
             select m.tipo as tipo, sum(m.monto) as total
             from MovimientoCaja m

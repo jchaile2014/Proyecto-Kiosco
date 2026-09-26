@@ -1,10 +1,15 @@
-package org.kiosco.caja;
+package org.kiosco.hoy;
 
+import org.kiosco.caja.CajaService;
+import org.kiosco.caja.MovimientoCaja;
 import org.kiosco.cierre.CierreDiarioService;
 import org.kiosco.comun.DatoInvalidoException;
 import org.kiosco.comun.Formatos;
 import org.kiosco.comun.MontoInvalidoException;
 import org.kiosco.comun.Montos;
+import org.kiosco.pedidos.Pedido;
+import org.kiosco.pedidos.PedidoService;
+import org.kiosco.pedidos.Proveedor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
 
@@ -33,12 +39,14 @@ class HoyController {
 
     private final CajaService caja;
     private final CierreDiarioService cierres;
+    private final PedidoService pedidos;
     private final Formatos fmt;
     private final Clock clock;
 
-    HoyController(CajaService caja, CierreDiarioService cierres, Formatos fmt, Clock clock) {
+    HoyController(CajaService caja, CierreDiarioService cierres, PedidoService pedidos, Formatos fmt, Clock clock) {
         this.caja = caja;
         this.cierres = cierres;
+        this.pedidos = pedidos;
         this.fmt = fmt;
         this.clock = clock;
     }
@@ -96,13 +104,29 @@ class HoyController {
     String eliminar(@PathVariable Long id,
                     @RequestHeader(name = "HX-Request", required = false) String htmx,
                     Model model) {
-        LocalDate dia;
-        try {
-            dia = caja.eliminar(id);
-        } catch (DatoInvalidoException e) {
-            dia = LocalDate.now(clock);
-        }
+        LocalDate dia = caja.eliminar(id);
         return responder(dia, htmx != null, true, model);
+    }
+
+    /** "Llegó" desde la caja del día: registra el pedido y actualiza lo que salió hoy. */
+    @PostMapping("/hoy/pedidos/{id}/llego")
+    String llegoPedido(@PathVariable Long id, @RequestParam(required = false) String montoBoleta,
+                       @RequestHeader(name = "HX-Request", required = false) String htmx,
+                       Model model) {
+        boolean ok;
+        try {
+            BigDecimal monto = Montos.parse(montoBoleta);
+            Pedido pedido = pedidos.registrarLlegada(id, monto);
+            model.addAttribute("avisoPedido", "Llegó el pedido de " + pedido.getProveedor().getNombre()
+                    + ": " + fmt.plata(monto) + " anotados como salida.");
+            ok = true;
+        } catch (DatoInvalidoException e) {
+            model.addAttribute("errorLlegada", e.getMessage());
+            model.addAttribute("pedidoConError", id);
+            model.addAttribute("montoIngresado", montoBoleta);
+            ok = false;
+        }
+        return responder(LocalDate.now(clock), htmx != null, ok, model);
     }
 
     private String responder(LocalDate dia, boolean htmx, boolean ok, Model model) {
@@ -127,11 +151,28 @@ class HoyController {
         model.addAttribute("totales", caja.totalesDel(dia));
         model.addAttribute("movimientos", caja.movimientosDel(dia));
         model.addAttribute("categorias", caja.categoriasDeGasto());
+        // Los avisos de pedidos solo tienen sentido en la caja de hoy
+        model.addAttribute("pedidosParaHoy", esHoy ? pedidos.pendientesParaHoy() : List.of());
+        model.addAttribute("avisoPreventistas", esHoy ? avisoPreventistas(pedidos.quienesVienenHoy()) : null);
         if (!model.containsAttribute("ventaForm")) {
             model.addAttribute("ventaForm", new VentaForm());
         }
         if (!model.containsAttribute("gastoForm")) {
             model.addAttribute("gastoForm", new GastoForm());
         }
+    }
+
+    /** "Hoy viene el preventista de Coca-Cola (2 cosas anotadas) y Lácteos." */
+    private String avisoPreventistas(List<Proveedor> vienen) {
+        if (vienen.isEmpty()) {
+            return null;
+        }
+        List<String> partes = vienen.stream().map(p -> switch (p.getNotas().size()) {
+            case 0 -> p.getNombre();
+            case 1 -> p.getNombre() + " (1 cosa anotada)";
+            default -> p.getNombre() + " (" + p.getNotas().size() + " cosas anotadas)";
+        }).toList();
+        return (vienen.size() == 1 ? "Hoy viene el preventista de " : "Hoy vienen los preventistas de ")
+                + fmt.enumerar(partes) + ".";
     }
 }

@@ -1,15 +1,17 @@
-package org.kiosco.caja;
+package org.kiosco.hoy;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.kiosco.LimpiezaDeBase;
 import org.kiosco.RelojDePrueba;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +29,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(RelojDePrueba.Config.class)
-@Transactional
 class HoyControllerTest {
 
     @Autowired
@@ -36,9 +37,18 @@ class HoyControllerTest {
     @Autowired
     RelojDePrueba reloj;
 
+    @Autowired
+    JdbcTemplate jdbc;
+
     @BeforeEach
     void setUp() {
+        LimpiezaDeBase.vaciar(jdbc);
         reloj.fijar(LocalDateTime.of(2026, 9, 20, 10, 0));
+    }
+
+    @AfterEach
+    void limpiar() {
+        LimpiezaDeBase.vaciar(jdbc);
     }
 
     @Test
