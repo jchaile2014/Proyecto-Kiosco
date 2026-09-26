@@ -1,5 +1,6 @@
 package org.kiosco.caja;
 
+import org.kiosco.comun.MontoPorNombre;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,6 +21,14 @@ public interface MovimientoCajaRepository extends JpaRepository<MovimientoCaja, 
             where m.fecha between :desde and :hasta
             group by m.tipo""")
     List<TotalPorTipo> totalesPorTipo(LocalDate desde, LocalDate hasta);
+
+    @Query("""
+            select new org.kiosco.comun.MontoPorNombre(m.categoria, sum(m.monto))
+            from MovimientoCaja m
+            where m.tipo = org.kiosco.caja.TipoMovimiento.GASTO and m.fecha between :desde and :hasta
+            group by m.categoria
+            order by sum(m.monto) desc""")
+    List<MontoPorNombre> gastosPorCategoria(LocalDate desde, LocalDate hasta);
 
     @Query("select min(m.fecha) from MovimientoCaja m")
     Optional<LocalDate> primeraFecha();

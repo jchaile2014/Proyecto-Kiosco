@@ -38,7 +38,7 @@
                             <div class="card-body d-flex flex-column">
                                 <th:block th:if="${cuenta.debe()}">
                                     <div class="subheader">Debe</div>
-                                    <div class="h1 mb-1 monto text-orange" th:text="${debe}">$ 12.300</div>
+                                    <div class="h1 mb-1 text-orange" th:text="${debe}">$ 12.300</div>
                                     <div class="text-secondary small mb-3" th:text="|Desde ${@fmt.haceCuanto(cuenta.desde)}|">Desde hace 12 días</div>
                                     <button type="button" class="btn btn-success w-100 mt-auto"
                                             th:attr="hx-post=@{/fiados/{id}/pago-total(id=${id})},

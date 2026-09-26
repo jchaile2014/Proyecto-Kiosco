@@ -55,6 +55,10 @@ public class CierreDiario {
         this.cerradoEn = ahora;
     }
 
+    public Totales totales() {
+        return new Totales(ventas, cobrosFiado, pagosPedidos, gastos);
+    }
+
     public LocalDate getFecha() {
         return fecha;
     }

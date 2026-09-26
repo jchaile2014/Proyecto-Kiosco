@@ -3,12 +3,14 @@ package org.kiosco.comun;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
@@ -27,6 +29,9 @@ public class Formatos {
     private static final DateTimeFormatter DIA_CON_ANIO = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy", ES_AR);
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter FECHA_CORTA = DateTimeFormatter.ofPattern("dd/MM");
+    private static final DateTimeFormatter MES_Y_ANIO = DateTimeFormatter.ofPattern("MMMM yyyy", ES_AR);
+    private static final BigDecimal MIL = new BigDecimal("1000");
+    private static final BigDecimal MILLON = new BigDecimal("1000000");
 
     private final Clock clock;
 
@@ -42,6 +47,39 @@ public class Formatos {
         boolean tieneCentavos = monto.stripTrailingZeros().scale() > 0;
         DecimalFormat formato = new DecimalFormat(tieneCentavos ? "#,##0.00" : "#,##0", DecimalFormatSymbols.getInstance(ES_AR));
         return (monto.signum() < 0 ? "− $ " : "$ ") + formato.format(monto.abs());
+    }
+
+    /** Para ejes de gráficos: "$ 850", "$ 12,5 mil", "$ 1,2 M". */
+    public String plataCorta(BigDecimal monto) {
+        BigDecimal abs = monto.abs();
+        DecimalFormat unDecimal = new DecimalFormat("#,##0.#", DecimalFormatSymbols.getInstance(ES_AR));
+        String signo = monto.signum() < 0 ? "− $ " : "$ ";
+        if (abs.compareTo(MIL) < 0) {
+            return signo + unDecimal.format(abs.setScale(0, RoundingMode.HALF_UP));
+        }
+        if (abs.compareTo(MILLON) < 0) {
+            return signo + unDecimal.format(abs.divide(MIL, 1, RoundingMode.HALF_UP)) + " mil";
+        }
+        return signo + unDecimal.format(abs.divide(MILLON, 1, RoundingMode.HALF_UP)) + " M";
+    }
+
+    /** Qué parte del total es: "34 %". */
+    public String porcentaje(BigDecimal parte, BigDecimal total) {
+        if (total.signum() == 0) {
+            return "—";
+        }
+        return parte.multiply(BigDecimal.valueOf(100)).divide(total, 0, RoundingMode.HALF_UP) + " %";
+    }
+
+    /** "Septiembre 2026". */
+    public String mes(YearMonth mes) {
+        String texto = mes.format(MES_Y_ANIO);
+        return Character.toUpperCase(texto.charAt(0)) + texto.substring(1);
+    }
+
+    /** "Lun 21", para las columnas de un gráfico. */
+    public String diaYNumero(LocalDate fecha) {
+        return diaCorto(fecha.getDayOfWeek()) + " " + fecha.getDayOfMonth();
     }
 
     /** Con el signo adelante, para listas de entradas y salidas: "+ $ 3.200" / "− $ 12.800". */

@@ -2,6 +2,7 @@ package org.kiosco.pedidos;
 
 import org.kiosco.caja.CajaService;
 import org.kiosco.comun.DatoInvalidoException;
+import org.kiosco.comun.MontoPorNombre;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -119,6 +120,12 @@ public class PedidoService {
     @Transactional(readOnly = true)
     public List<Pedido> llegadosRecientes() {
         return pedidos.findTop10ByEstadoOrderByFechaLlegadaDescIdDesc(EstadoPedido.LLEGO);
+    }
+
+    /** Cuánto se le pagó a cada proveedor en boletas, de mayor a menor. */
+    @Transactional(readOnly = true)
+    public List<MontoPorNombre> pagadoPorProveedor(LocalDate desde, LocalDate hasta) {
+        return pedidos.pagadoPorProveedor(desde, hasta);
     }
 
     /** Llegó el pedido: queda registrado y el monto de la boleta sale de la caja de hoy. */

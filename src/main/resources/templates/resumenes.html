@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina('Resúmenes', ~{::main}, 'resumenes')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="page-pretitle">Cómo viene el negocio</div>
+            <h2 class="page-title">Resúmenes</h2>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+
+            <div class="d-flex align-items-baseline gap-2 mb-3">
+                <h3 class="mb-0">Últimos 7 días</h3>
+                <span class="text-secondary"
+                      th:text="|del ${@fmt.fechaCorta(semana.desde())} al ${@fmt.fechaCorta(semana.hasta())}, con lo de hoy|">del 20/09 al 26/09</span>
+            </div>
+
+            <div th:replace="~{fragmentos/resumen :: totales(${semana.totales()}, ${variacionVentas}, 'que los 7 días anteriores')}"></div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">Vendido por día</h3>
+                </div>
+                <div class="card-body">
+                    <figure th:replace="~{fragmentos/resumen :: grafico(${graficoSemana})}"></figure>
+                </div>
+            </div>
+
+            <div th:replace="~{fragmentos/resumen :: dias(${semana})}"></div>
+            <div th:replace="~{fragmentos/resumen :: detalle(${semana})}"></div>
+
+            <h3 class="mt-5 mb-3">Mes por mes</h3>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">Vendido y pagado en pedidos</h3>
+                </div>
+                <div class="card-body">
+                    <figure th:replace="~{fragmentos/resumen :: grafico(${graficoMeses})}"></figure>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                        <tr>
+                            <th>Mes</th>
+                            <th class="text-end">Vendido</th>
+                            <th class="text-end">Pagado en pedidos</th>
+                            <th class="text-end">Gastos</th>
+                            <th class="text-end">Fiados cobrados</th>
+                            <th class="text-end">Balance</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="m : ${meses}" th:with="t=${m.totales()}">
+                            <td>
+                                <a th:href="@{/resumenes/{a}/{m}(a=${m.mes().year},m=${m.mes().monthValue})}"
+                                   th:text="${@fmt.mes(m.mes())}">Septiembre 2026</a>
+                                <span class="badge bg-blue-lt ms-1" th:if="${m.enCurso()}">lo que va</span>
+                            </td>
+                            <td class="text-end monto" th:text="${@fmt.plata(t.ventas())}">$ 1.950.000</td>
+                            <td class="text-end monto" th:text="${@fmt.plata(t.pagosPedidos())}">$ 620.000</td>
+                            <td class="text-end monto" th:text="${@fmt.plata(t.gastos())}">$ 310.000</td>
+                            <td class="text-end monto" th:text="${@fmt.plata(t.cobrosFiado())}">$ 45.000</td>
+                            <td class="text-end monto fw-medium" th:classappend="${t.balance().signum() < 0} ? 'text-red'"
+                                th:text="${@fmt.plata(t.balance())}">$ 1.065.000</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</main>
+</body>
+</html>

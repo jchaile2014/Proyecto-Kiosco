@@ -22,6 +22,11 @@ public record Totales(BigDecimal ventas, BigDecimal cobrosFiado, BigDecimal pago
         return t;
     }
 
+    public Totales mas(Totales otro) {
+        return new Totales(ventas.add(otro.ventas), cobrosFiado.add(otro.cobrosFiado),
+                pagosPedidos.add(otro.pagosPedidos), gastos.add(otro.gastos));
+    }
+
     public BigDecimal entradas() {
         return ventas.add(cobrosFiado);
     }

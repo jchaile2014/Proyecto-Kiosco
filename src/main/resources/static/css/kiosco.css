@@ -31,3 +31,206 @@
     max-width: 18rem;
     margin-left: auto;
 }
+
+/* ---------- Gráficos de columnas (resúmenes) ----------
+   Colores validados contra el fondo de las tarjetas (contraste y daltonismo):
+   serie 1 = Vendido, serie 2 = Pagado en pedidos. El color sigue a la serie en todos los gráficos. */
+.grafico {
+    --serie-1: #2a78d6;
+    --serie-2: #eb6834;
+    --grafico-alto: 13rem;
+    --grafico-eje: 4.5rem;
+    margin: 0;
+}
+
+.serie-1 { --serie: var(--serie-1); }
+.serie-2 { --serie: var(--serie-2); }
+
+.grafico-leyenda {
+    display: flex;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+    font-size: .8125rem;
+    color: var(--tblr-secondary);
+}
+
+.grafico-clave {
+    display: inline-flex;
+    align-items: center;
+    gap: .375rem;
+}
+
+.grafico-muestra {
+    width: .625rem;
+    height: .625rem;
+    border-radius: 2px;
+    background: var(--serie);
+}
+
+.grafico-cuerpo {
+    display: grid;
+    grid-template-columns: var(--grafico-eje) minmax(0, 1fr);
+    column-gap: .5rem;
+    /* lugar para los valores escritos arriba de las barras más altas */
+    padding-top: 1.25rem;
+}
+
+.grafico-eje {
+    position: relative;
+    height: var(--grafico-alto);
+    font-size: .75rem;
+    color: var(--tblr-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.grafico-eje span {
+    position: absolute;
+    right: 0;
+    transform: translateY(50%);
+    white-space: nowrap;
+}
+
+.grafico-plot {
+    position: relative;
+    display: flex;
+    height: var(--grafico-alto);
+}
+
+/* Grilla: líneas finas y lisas, un tono sobre el fondo */
+.grafico-grilla {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid var(--tblr-border-color-translucent);
+    pointer-events: none;
+}
+
+/* Toda la columna es el área para pasar el mouse, no solo la barra */
+.grafico-grupo {
+    position: relative;
+    flex: 1 1 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    min-width: 0;
+    border-radius: 4px 4px 0 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.grafico-grupo:hover,
+.grafico-grupo:focus-visible {
+    background: rgba(var(--tblr-primary-rgb), .05);
+    outline: none;
+}
+
+.grafico-barras {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2px;
+    width: 100%;
+    height: 100%;
+}
+
+/* Barras finas (hasta 24 px), punta redondeada y base recta */
+.grafico-barra {
+    position: relative;
+    flex: 0 1 24px;
+    min-width: 2px;
+    border-radius: 4px 4px 0 0;
+    background: var(--serie);
+}
+
+.grafico-grupo:hover .grafico-barra,
+.grafico-grupo:focus-visible .grafico-barra {
+    filter: brightness(1.1);
+}
+
+.grafico-valor {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, -.25rem);
+    font-size: .75rem;
+    color: var(--tblr-secondary);
+    white-space: nowrap;
+}
+
+.grafico-etiquetas {
+    display: flex;
+    margin-left: calc(var(--grafico-eje) + .5rem);
+    border-top: 1px solid var(--tblr-border-color);
+    font-size: .75rem;
+    color: var(--tblr-secondary);
+}
+
+.grafico-etiquetas span {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-top: .375rem;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Cartel con los valores de la columna, al pasar el mouse o enfocar con el teclado */
+.grafico-tooltip {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 10;
+    transform: translate(-50%, calc(-100% - .5rem));
+    padding: .5rem .75rem;
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 4px;
+    background: var(--tblr-bg-surface);
+    box-shadow: var(--tblr-box-shadow-dropdown);
+    color: var(--tblr-body-color);
+    font-size: .8125rem;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.grafico-grupo.primero .grafico-tooltip {
+    left: 0;
+    transform: translate(0, calc(-100% - .5rem));
+}
+
+.grafico-grupo.ultimo .grafico-tooltip {
+    left: auto;
+    right: 0;
+    transform: translate(0, calc(-100% - .5rem));
+}
+
+.grafico-grupo:hover .grafico-tooltip,
+.grafico-grupo:focus-visible .grafico-tooltip {
+    display: block;
+}
+
+.grafico-tooltip-titulo {
+    display: block;
+    margin-bottom: .25rem;
+    color: var(--tblr-secondary);
+}
+
+.grafico-tooltip-fila {
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+}
+
+.grafico-tooltip-fila strong {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* En el cartel, cada serie se identifica con una rayita de su color */
+.grafico-linea {
+    width: .75rem;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--serie);
+}

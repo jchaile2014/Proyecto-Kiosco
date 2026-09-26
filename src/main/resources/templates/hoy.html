@@ -52,7 +52,7 @@
                                     <div class="subheader">Entró</div>
                                     <i class="ti ti-arrow-down-left ms-auto text-green" aria-hidden="true"></i>
                                 </div>
-                                <div class="h1 mb-1 monto text-green" th:text="${@fmt.plata(totales.entradas())}">$ 0</div>
+                                <div class="h1 mb-1 text-green" th:text="${@fmt.plata(totales.entradas())}">$ 0</div>
                                 <div class="text-secondary small">
                                     <span th:text="|Ventas ${@fmt.plata(totales.ventas())}|">Ventas $ 0</span>
                                     <span th:if="${totales.cobrosFiado().signum() > 0}"
@@ -68,7 +68,7 @@
                                     <div class="subheader">Salió</div>
                                     <i class="ti ti-arrow-up-right ms-auto text-red" aria-hidden="true"></i>
                                 </div>
-                                <div class="h1 mb-1 monto text-red" th:text="${@fmt.plata(totales.salidas())}">$ 0</div>
+                                <div class="h1 mb-1 text-red" th:text="${@fmt.plata(totales.salidas())}">$ 0</div>
                                 <div class="text-secondary small">
                                     <span th:text="|Gastos ${@fmt.plata(totales.gastos())}|">Gastos $ 0</span>
                                     <span th:if="${totales.pagosPedidos().signum() > 0}"
@@ -84,7 +84,7 @@
                                     <div class="subheader">Balance del día</div>
                                     <i class="ti ti-scale ms-auto text-secondary" aria-hidden="true"></i>
                                 </div>
-                                <div class="h1 mb-1 monto" th:classappend="${totales.balance().signum() < 0} ? 'text-red'"
+                                <div class="h1 mb-1" th:classappend="${totales.balance().signum() < 0} ? 'text-red'"
                                      th:text="${@fmt.plata(totales.balance())}">$ 0</div>
                                 <div class="text-secondary small">Lo que entró menos lo que salió</div>
                             </div>

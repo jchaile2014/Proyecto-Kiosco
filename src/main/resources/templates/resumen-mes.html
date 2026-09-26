@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina(${titulo}, ~{::main}, 'resumenes')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-3 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">
+                        Resumen del mes <span class="badge bg-blue-lt ms-1" th:if="${enCurso}">lo que va</span>
+                    </div>
+                    <h2 class="page-title" th:text="${titulo}">Septiembre 2026</h2>
+                </div>
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <a class="btn btn-icon" th:href="@{/resumenes/{a}/{m}(a=${mesAnterior.year},m=${mesAnterior.monthValue})}"
+                       title="Mes anterior" aria-label="Mes anterior">
+                        <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                    </a>
+                    <a class="btn btn-icon" th:if="${mesSiguiente != null}"
+                       th:href="@{/resumenes/{a}/{m}(a=${mesSiguiente.year},m=${mesSiguiente.monthValue})}"
+                       title="Mes siguiente" aria-label="Mes siguiente">
+                        <i class="ti ti-chevron-right" aria-hidden="true"></i>
+                    </a>
+                    <a class="btn" th:href="@{/resumenes}">Todos los meses</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+
+            <div th:replace="~{fragmentos/resumen :: totales(${periodo.totales()}, null, '')}"></div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title">Vendido por día</h3>
+                </div>
+                <div class="card-body">
+                    <figure th:replace="~{fragmentos/resumen :: grafico(${grafico})}"></figure>
+                </div>
+            </div>
+
+            <div th:replace="~{fragmentos/resumen :: detalle(${periodo})}"></div>
+            <div th:replace="~{fragmentos/resumen :: dias(${periodo})}"></div>
+
+        </div>
+    </div>
+</main>
+</body>
+</html>

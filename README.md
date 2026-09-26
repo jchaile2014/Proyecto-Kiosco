@@ -1,6 +1,6 @@
 # Kiosco
 
-Control diario de la caja de un kiosco de barrio: lo que se vende, lo que se gasta, lo que se les paga a los proveedores y lo que se fía, con cierre de caja automático al terminar cada día.
+Control diario de la caja de un kiosco de barrio: lo que se vende, lo que se gasta, lo que se les paga a los proveedores y lo que se fía, con cierre de caja automático al terminar cada día y resúmenes semanales y mensuales.
 
 Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) y se abre en una ventana propia, así que se usa como una app de escritorio. No necesita internet.
 
@@ -38,12 +38,21 @@ Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) 
 - **Cuánto te deben en total** y desde hace cuánto debe cada uno. Ese total no aparece en la pantalla principal.
 - **Correcciones**: se puede borrar un renglón anotado mal o deshacer un "ya pagó", y la caja se ajusta sola.
 
+### Resúmenes
+
+![Resumen de los últimos 7 días](docs/captura-resumenes.png)
+
+- **Últimos 7 días**: lo vendido, lo pagado en pedidos, los gastos, los fiados cobrados y el balance, comparando lo vendido con los 7 días anteriores. Incluye un gráfico día por día.
+- **Mes por mes**: un renglón por mes con lo vendido y lo pagado en pedidos. El mes actual muestra "lo que va". Los meses anteriores quedan guardados gracias a los cierres diarios.
+- **Detalle de cada mes**: día por día, en qué se gastó y cuánto se le pagó a cada proveedor.
+- **Gráficos sin librerías**: se dibujan en el servidor con HTML y CSS. Tienen barras finas, grilla suave, un cartel al pasar el mouse (o con el teclado) y una tabla con los mismos números. Los colores se validaron para daltonismo y contraste.
+
 ### Hoja de ruta
 
 - [x] Caja del día: ventas, gastos, balance y cierre automático
 - [x] Pedidos a proveedores: notas de qué pedirle a cada uno, días del preventista y "llegó" con el monto de la boleta
 - [x] Fiados: libreta por cliente con saldo acumulado, pagos, interés a pedido e historial
-- [ ] Resúmenes: últimos 7 días y mes por mes, con gráficos
+- [x] Resúmenes: últimos 7 días y mes por mes, con gráficos
 - [ ] Productos con stock opcional, backup automático e ícono de escritorio
 
 ## Stack
@@ -96,12 +105,13 @@ Las tablas se crean solas la primera vez gracias a Flyway. En lugar del archivo 
 mvn test
 ```
 
-Cubren cinco cosas:
+Cubren seis cosas:
 
 - La lectura de montos escritos a la argentina.
 - El cierre automático: días con la PC apagada, correcciones de días ya cerrados, días salteados y fechas futuras.
 - Las reglas de pedidos: notas que pasan al pedido, boleta que sale de la caja, deshacer y cancelar, y qué pedidos mostrar en la caja de hoy.
 - Las reglas de fiados: saldo acumulado, pagos parciales y totales, interés redondeado, historial, correcciones y que nunca se pueda pagar más de lo que se debe.
+- Los resúmenes: que usen los cierres guardados y calculen hoy en el momento, la agrupación por mes y la escala de los gráficos con números redondos.
 - Las pantallas con MockMvc: carga con HTMX, errores de validación, redirección sin JavaScript y rechazo de pedidos sin token CSRF.
 
 Los tests de pantallas no corren dentro de una transacción, igual que la app real, donde cada pedido HTTP tiene la suya. Así aparecen los errores de carga diferida de Hibernate que un test transaccional escondería. Las migraciones también se probaron contra un MySQL 8 real, incluidas las actualizaciones de una versión de la base a la siguiente.
@@ -115,6 +125,7 @@ src/main/java/org/kiosco/
 ├── hoy/       pantalla principal: junta caja, pedidos y avisos del día
 ├── pedidos/   proveedores, notas de qué pedir y pedidos
 ├── fiados/    clientes y su libreta
+├── resumenes/ últimos 7 días, mes por mes y gráficos
 ├── comun/     montos, fechas y manejo de errores
 ├── config/    seguridad y reloj
 └── demo/      datos de ejemplo del modo demo

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* Los cinco números del período. La variación de lo vendido es opcional. */-->
+<div class="row row-cols-2 row-cols-lg-5 g-3 mb-3" th:fragment="totales(t, variacion, comparadoCon)">
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="subheader">Vendido</div>
+                <div class="h1 mb-1" th:text="${@fmt.plata(t.ventas())}">$ 520.300</div>
+                <div class="small" th:if="${variacion != null}"
+                     th:classappend="${variacion.sube()} ? 'text-green' : (${variacion.baja()} ? 'text-red' : 'text-secondary')">
+                    <i class="ti" aria-hidden="true"
+                       th:classappend="${variacion.sube()} ? 'ti-trending-up' : (${variacion.baja()} ? 'ti-trending-down' : 'ti-equal')"></i>
+                    <span th:text="|${variacion.texto()} ${comparadoCon}|">+8 % que los 7 días anteriores</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="subheader">Pagado en pedidos</div>
+                <div class="h1 mb-1" th:text="${@fmt.plata(t.pagosPedidos())}">$ 180.000</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="subheader">Gastos</div>
+                <div class="h1 mb-1" th:text="${@fmt.plata(t.gastos())}">$ 75.200</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="subheader">Fiados cobrados</div>
+                <div class="h1 mb-1" th:text="${@fmt.plata(t.cobrosFiado())}">$ 12.400</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="subheader">Balance</div>
+                <div class="h1 mb-1" th:classappend="${t.balance().signum() < 0} ? 'text-red'"
+                     th:text="${@fmt.plata(t.balance())}">$ 277.500</div>
+                <div class="small text-secondary">Lo que entró menos lo que salió</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--/*
+    Gráfico de columnas dibujado con HTML y CSS. Cada columna es un enlace (se puede
+    enfocar con el teclado) y muestra un cartel con los valores al pasar el mouse.
+    Los mismos números están en la tabla que acompaña a cada gráfico.
+*/-->
+<figure class="grafico" th:fragment="grafico(g)">
+    <div class="grafico-leyenda" th:if="${g.series().size() > 1}">
+        <span class="grafico-clave" th:each="nombre, i : ${g.series()}">
+            <span class="grafico-muestra" th:classappend="|serie-${i.count}|" aria-hidden="true"></span>
+            <span th:text="${nombre}">Vendido</span>
+        </span>
+    </div>
+    <div class="grafico-cuerpo" role="group" th:attr="aria-label=${g.descripcion()}">
+        <div class="grafico-eje" aria-hidden="true">
+            <span th:each="l : ${g.lineas()}" th:style="|bottom: ${l.altura()}%|" th:text="${l.texto()}">$ 100 mil</span>
+        </div>
+        <div class="grafico-plot">
+            <span class="grafico-grilla" th:each="l : ${g.lineas()}" th:style="|bottom: ${l.altura()}%|" aria-hidden="true"></span>
+            <a class="grafico-grupo" th:each="gr, i : ${g.grupos()}" th:href="${gr.url()}"
+               th:classappend="${i.first} ? 'primero' : (${i.last} ? 'ultimo')"
+               th:attr="aria-label=${gr.descripcionAccesible()}">
+                <span class="grafico-barras">
+                    <span class="grafico-barra" th:each="b : ${gr.barras()}" th:classappend="|serie-${b.serie()}|"
+                          th:style="|height: ${b.altura()}%|">
+                        <span class="grafico-valor" th:if="${b.etiqueta() != null}" th:text="${b.etiqueta()}">$ 95 mil</span>
+                    </span>
+                </span>
+                <span class="grafico-tooltip" aria-hidden="true">
+                    <span class="grafico-tooltip-titulo" th:text="${gr.titulo()}">Lunes 21 de septiembre</span>
+                    <span class="grafico-tooltip-fila" th:each="b : ${gr.barras()}">
+                        <span class="grafico-linea" th:classappend="|serie-${b.serie()}|"></span>
+                        <strong th:text="${b.monto()}">$ 85.300</strong>
+                        <span class="text-secondary" th:text="${b.nombreSerie()}">Vendido</span>
+                    </span>
+                </span>
+            </a>
+        </div>
+    </div>
+    <div class="grafico-etiquetas" aria-hidden="true">
+        <span th:each="gr : ${g.grupos()}" th:text="${gr.etiqueta()}">Lun 21</span>
+    </div>
+</figure>
+
+<!--/* La tabla día por día: es también la versión accesible del gráfico. */-->
+<div class="card mb-3" th:fragment="dias(p)">
+    <div class="card-header">
+        <h3 class="card-title">Día por día</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+            <tr>
+                <th>Día</th>
+                <th class="text-end">Vendido</th>
+                <th class="text-end">Fiados cobrados</th>
+                <th class="text-end">Pedidos</th>
+                <th class="text-end">Gastos</th>
+                <th class="text-end">Balance</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="d : ${p.dias()}" th:with="t=${d.totales()}">
+                <td>
+                    <a th:href="@{/(fecha=${d.fecha()})}" th:text="${@fmt.fechaLarga(d.fecha())}">Lunes 21 de septiembre</a>
+                    <span class="badge bg-blue-lt ms-1" th:if="${d.fecha() == hoy}">hoy</span>
+                </td>
+                <td class="text-end monto" th:classappend="${t.ventas().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.ventas())}">$ 85.300</td>
+                <td class="text-end monto" th:classappend="${t.cobrosFiado().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.cobrosFiado())}">$ 0</td>
+                <td class="text-end monto" th:classappend="${t.pagosPedidos().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.pagosPedidos())}">$ 45.000</td>
+                <td class="text-end monto" th:classappend="${t.gastos().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.gastos())}">$ 12.800</td>
+                <td class="text-end monto fw-medium" th:classappend="${t.balance().signum() < 0} ? 'text-red'" th:text="${@fmt.plata(t.balance())}">$ 27.500</td>
+            </tr>
+            </tbody>
+            <tfoot th:with="t=${p.totales()}">
+            <tr class="fw-bold">
+                <td>Total</td>
+                <td class="text-end monto" th:text="${@fmt.plata(t.ventas())}">$ 520.300</td>
+                <td class="text-end monto" th:text="${@fmt.plata(t.cobrosFiado())}">$ 12.400</td>
+                <td class="text-end monto" th:text="${@fmt.plata(t.pagosPedidos())}">$ 180.000</td>
+                <td class="text-end monto" th:text="${@fmt.plata(t.gastos())}">$ 75.200</td>
+                <td class="text-end monto" th:classappend="${t.balance().signum() < 0} ? 'text-red'" th:text="${@fmt.plata(t.balance())}">$ 277.500</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!--/* En qué se fue la plata del período. */-->
+<div class="row row-cards mb-3" th:fragment="detalle(p)">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title">En qué se gastó</h3>
+            </div>
+            <div class="card-body text-secondary" th:if="${p.gastosPorCategoria().isEmpty()}">No hubo gastos.</div>
+            <table class="table table-vcenter card-table" th:unless="${p.gastosPorCategoria().isEmpty()}">
+                <tbody>
+                <tr th:each="g : ${p.gastosPorCategoria()}">
+                    <td th:text="${g.nombre()}">Panadero</td>
+                    <td class="text-end monto" th:text="${@fmt.plata(g.monto())}">$ 62.400</td>
+                    <td class="text-end text-secondary monto text-nowrap w-1" th:text="${@fmt.porcentaje(g.monto(), p.totales().gastos())}">83 %</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title">Pagado a cada proveedor</h3>
+            </div>
+            <div class="card-body text-secondary" th:if="${p.pagadoPorProveedor().isEmpty()}">No llegó ningún pedido.</div>
+            <table class="table table-vcenter card-table" th:unless="${p.pagadoPorProveedor().isEmpty()}">
+                <tbody>
+                <tr th:each="pr : ${p.pagadoPorProveedor()}">
+                    <td th:text="${pr.nombre()}">Coca-Cola</td>
+                    <td class="text-end monto" th:text="${@fmt.plata(pr.monto())}">$ 76.500</td>
+                    <td class="text-end text-secondary monto text-nowrap w-1" th:text="${@fmt.porcentaje(pr.monto(), p.totales().pagosPedidos())}">54 %</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

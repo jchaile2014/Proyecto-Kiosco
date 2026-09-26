@@ -2,6 +2,7 @@ package org.kiosco.caja;
 
 import org.kiosco.cierre.CierreDiarioService;
 import org.kiosco.comun.DatoInvalidoException;
+import org.kiosco.comun.MontoPorNombre;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,6 +116,12 @@ public class CajaService {
     @Transactional(readOnly = true)
     public Totales totalesEntre(LocalDate desde, LocalDate hasta) {
         return Totales.desde(movimientos.totalesPorTipo(desde, hasta));
+    }
+
+    /** En qué se fue la plata de los gastos, de mayor a menor. */
+    @Transactional(readOnly = true)
+    public List<MontoPorNombre> gastosPorCategoria(LocalDate desde, LocalDate hasta) {
+        return movimientos.gastosPorCategoria(desde, hasta);
     }
 
     /** Las categorías sugeridas primero, después las que se fueron escribiendo a mano. */

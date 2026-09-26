@@ -72,7 +72,7 @@
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="subheader">Te deben en total</div>
-                                <div class="h1 mb-1 monto text-orange" th:text="${@fmt.plata(totalEnLaCalle)}">$ 0</div>
+                                <div class="h1 mb-1 text-orange" th:text="${@fmt.plata(totalEnLaCalle)}">$ 0</div>
                                 <div class="text-secondary small"
                                      th:text="${abiertas.size() == 1} ? '1 cliente con cuenta abierta' : |${abiertas.size()} clientes con cuenta abierta|">
                                 </div>
