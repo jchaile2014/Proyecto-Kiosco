@@ -1,0 +1,12 @@
+/* Números alineados en columnas para que los montos se lean de un vistazo */
+.monto {
+    font-variant-numeric: tabular-nums;
+}
+
+.icono-vacio {
+    font-size: 2.5rem;
+}
+
+.navbar-brand {
+    font-size: 1.15rem;
+}

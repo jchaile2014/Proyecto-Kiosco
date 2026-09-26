@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina(${titulo}, ~{::main}, 'hoy')}">
+<body>
+<main>
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-3 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle" th:text="${esHoy} ? 'Caja de hoy' : 'Caja de un día anterior'">Caja de hoy</div>
+                    <h2 class="page-title" th:text="${@fmt.fechaLarga(fecha)}">Sábado 26 de septiembre</h2>
+                </div>
+                <div class="col-auto ms-auto d-flex gap-2">
+                    <a class="btn btn-icon" th:href="@{/(fecha=${diaAnterior})}" title="Día anterior" aria-label="Día anterior">
+                        <i class="ti ti-chevron-left" aria-hidden="true"></i>
+                    </a>
+                    <input type="date" class="form-control w-auto" data-ir-a-fecha aria-label="Ir a otro día"
+                           th:value="${fecha}" th:max="${hoy}">
+                    <a class="btn btn-icon" th:if="${diaSiguiente != null}" th:href="@{/(fecha=${diaSiguiente})}"
+                       title="Día siguiente" aria-label="Día siguiente">
+                        <i class="ti ti-chevron-right" aria-hidden="true"></i>
+                    </a>
+                    <a class="btn" th:unless="${esHoy}" th:href="@{/}">Volver a hoy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-xl">
+            <div id="panel-dia" th:fragment="panel">
+
+                <div class="alert alert-secondary d-flex align-items-center" role="status" th:unless="${esHoy}">
+                    <i class="ti ti-lock me-2" aria-hidden="true"></i>
+                    <span th:if="${cierre != null}">
+                        Este día ya se cerró solo. Si te olvidaste de anotar algo, cargalo acá y el cierre se recalcula.
+                    </span>
+                    <span th:if="${cierre == null}">Este día no tiene movimientos. Si te olvidaste de anotar algo, cargalo acá.</span>
+                </div>
+
+                <div class="row row-deck row-cards mb-3">
+                    <div class="col-sm-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader">Entró</div>
+                                    <i class="ti ti-arrow-down-left ms-auto text-green" aria-hidden="true"></i>
+                                </div>
+                                <div class="h1 mb-1 monto text-green" th:text="${@fmt.plata(totales.entradas())}">$ 0</div>
+                                <div class="text-secondary small">
+                                    <span th:text="|Ventas ${@fmt.plata(totales.ventas())}|">Ventas $ 0</span>
+                                    <span th:if="${totales.cobrosFiado().signum() > 0}"
+                                          th:text="| · Fiados cobrados ${@fmt.plata(totales.cobrosFiado())}|"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader">Salió</div>
+                                    <i class="ti ti-arrow-up-right ms-auto text-red" aria-hidden="true"></i>
+                                </div>
+                                <div class="h1 mb-1 monto text-red" th:text="${@fmt.plata(totales.salidas())}">$ 0</div>
+                                <div class="text-secondary small">
+                                    <span th:text="|Gastos ${@fmt.plata(totales.gastos())}|">Gastos $ 0</span>
+                                    <span th:if="${totales.pagosPedidos().signum() > 0}"
+                                          th:text="| · Pedidos ${@fmt.plata(totales.pagosPedidos())}|"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="subheader">Balance del día</div>
+                                    <i class="ti ti-scale ms-auto text-secondary" aria-hidden="true"></i>
+                                </div>
+                                <div class="h1 mb-1 monto" th:classappend="${totales.balance().signum() < 0} ? 'text-red'"
+                                     th:text="${@fmt.plata(totales.balance())}">$ 0</div>
+                                <div class="text-secondary small">Lo que entró menos lo que salió</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row row-cards mb-3">
+                    <div class="col-lg-6">
+                        <form class="card h-100" method="post" th:action="@{/movimientos/venta}" th:object="${ventaForm}"
+                              hx-post="/movimientos/venta" hx-target="#panel-dia" hx-swap="outerHTML">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="ti ti-shopping-cart text-green me-2" aria-hidden="true"></i>Anotar venta</h3>
+                            </div>
+                            <div class="card-body">
+                                <input type="hidden" name="fecha" th:unless="${esHoy}" th:value="${fecha}">
+                                <label class="form-label" for="venta-monto">Monto</label>
+                                <div class="input-group input-group-lg has-validation mb-3">
+                                    <span class="input-group-text">$</span>
+                                    <input id="venta-monto" type="text" inputmode="decimal" autocomplete="off"
+                                           class="form-control monto" placeholder="1.500"
+                                           th:field="*{monto}" th:classappend="${errorVenta != null} ? 'is-invalid'"
+                                           th:autofocus="${errorGasto == null}">
+                                    <div class="invalid-feedback" th:if="${errorVenta != null}" th:text="${errorVenta}"></div>
+                                </div>
+                                <label class="form-label" for="venta-detalle">
+                                    Detalle <span class="form-label-description">opcional</span>
+                                </label>
+                                <input id="venta-detalle" type="text" class="form-control" maxlength="200"
+                                       placeholder="Gaseosa y alfajor" th:field="*{descripcion}">
+                            </div>
+                            <div class="card-footer d-flex align-items-center gap-2">
+                                <span class="text-green small" th:if="${avisoVenta != null}">
+                                    <i class="ti ti-check me-1" aria-hidden="true"></i><span th:text="${avisoVenta}"></span>
+                                </span>
+                                <button class="btn btn-success ms-auto" type="submit">
+                                    <i class="ti ti-plus me-1" aria-hidden="true"></i>Anotar venta
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <form class="card h-100" method="post" th:action="@{/movimientos/gasto}" th:object="${gastoForm}"
+                              hx-post="/movimientos/gasto" hx-target="#panel-dia" hx-swap="outerHTML">
+                            <div class="card-header">
+                                <h3 class="card-title"><i class="ti ti-receipt text-red me-2" aria-hidden="true"></i>Anotar gasto</h3>
+                            </div>
+                            <div class="card-body">
+                                <input type="hidden" name="fecha" th:unless="${esHoy}" th:value="${fecha}">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="gasto-monto">Monto</label>
+                                        <div class="input-group has-validation">
+                                            <span class="input-group-text">$</span>
+                                            <input id="gasto-monto" type="text" inputmode="decimal" autocomplete="off"
+                                                   class="form-control monto" placeholder="12.800"
+                                                   th:field="*{monto}" th:classappend="${campoConError == 'monto'} ? 'is-invalid'"
+                                                   th:autofocus="${errorGasto != null and campoConError != 'categoria'}">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="gasto-categoria">En qué</label>
+                                        <input id="gasto-categoria" type="text" class="form-control" list="categorias-gasto"
+                                               maxlength="60" autocomplete="off" placeholder="Panadero" th:field="*{categoria}"
+                                               th:classappend="${campoConError == 'categoria'} ? 'is-invalid'"
+                                               th:autofocus="${campoConError == 'categoria'}">
+                                        <datalist id="categorias-gasto">
+                                            <option th:each="c : ${categorias}" th:value="${c}"></option>
+                                        </datalist>
+                                    </div>
+                                    <div class="col-12" th:if="${errorGasto != null}">
+                                        <div class="text-red small" th:text="${errorGasto}"></div>
+                                    </div>
+                                </div>
+                                <label class="form-label" for="gasto-detalle">
+                                    Detalle <span class="form-label-description">opcional</span>
+                                </label>
+                                <input id="gasto-detalle" type="text" class="form-control" maxlength="200"
+                                       placeholder="Facturas y pan del día" th:field="*{descripcion}">
+                            </div>
+                            <div class="card-footer d-flex align-items-center gap-2">
+                                <span class="text-secondary small" th:if="${avisoGasto != null}">
+                                    <i class="ti ti-check me-1" aria-hidden="true"></i><span th:text="${avisoGasto}"></span>
+                                </span>
+                                <button class="btn btn-outline-danger ms-auto" type="submit">
+                                    <i class="ti ti-minus me-1" aria-hidden="true"></i>Anotar gasto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Movimientos del día</h3>
+                        <div class="card-actions text-secondary small" th:unless="${movimientos.isEmpty()}"
+                             th:text="${movimientos.size() == 1} ? '1 anotado' : |${movimientos.size()} anotados|">
+                        </div>
+                    </div>
+                    <div class="card-body text-center text-secondary py-5" th:if="${movimientos.isEmpty()}">
+                        <i class="ti ti-notebook d-block mb-2 icono-vacio" aria-hidden="true"></i>
+                        Todavía no hay nada anotado este día.
+                    </div>
+                    <div class="table-responsive" th:unless="${movimientos.isEmpty()}">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                            <tr>
+                                <th class="w-1">Hora</th>
+                                <th class="w-1">Tipo</th>
+                                <th>Detalle</th>
+                                <th class="text-end">Monto</th>
+                                <th class="w-1"><span class="visually-hidden">Acciones</span></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="m : ${movimientos}">
+                                <td class="text-secondary monto" th:text="${@fmt.hora(m.registradoEn)}">10:42</td>
+                                <td>
+                                    <span class="badge" th:classappend="${m.tipo.entrada} ? 'bg-green-lt' : 'bg-red-lt'"
+                                          th:text="${m.tipo.etiqueta}">Venta</span>
+                                </td>
+                                <td th:text="${m.detalle}">Venta</td>
+                                <td class="text-end monto fw-medium" th:classappend="${m.tipo.entrada} ? 'text-green' : 'text-red'"
+                                    th:text="${@fmt.plataConSigno(m.monto, m.tipo.entrada)}">+ $ 3.200</td>
+                                <td>
+                                    <button type="button" class="btn btn-ghost-secondary btn-icon btn-sm"
+                                            th:attr="hx-post=@{/movimientos/{id}/eliminar(id=${m.id})}"
+                                            hx-target="#panel-dia" hx-swap="outerHTML"
+                                            hx-confirm="¿Borrar este movimiento?"
+                                            title="Borrar" aria-label="Borrar movimiento">
+                                        <i class="ti ti-trash" aria-hidden="true"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

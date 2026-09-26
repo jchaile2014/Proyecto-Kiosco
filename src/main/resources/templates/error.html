@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: pagina('Algo salió mal', ~{::main}, '')}">
+<body>
+<main>
+    <div class="page-body">
+        <div class="container-tight py-5 text-center">
+            <div class="display-4 text-secondary mb-3" th:text="${status}">404</div>
+            <p class="h3" th:text="${status == 404} ? 'Esa página no existe.' : 'Algo salió mal.'">Algo salió mal.</p>
+            <p class="text-secondary">Volvé a la caja de hoy y probá de nuevo.</p>
+            <a class="btn btn-primary" th:href="@{/}"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Ir a Hoy</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

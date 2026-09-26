@@ -1,81 +1,96 @@
 # Kiosco
 
-Sistema de gestión para un kiosco/almacén de barrio, hecho en **Java 21** con interfaz de escritorio **Swing** y persistencia con **JPA/Hibernate** sobre **PostgreSQL**.
+Control diario de la caja de un kiosco de barrio: lo que se vende, lo que se gasta y lo que se les paga a los proveedores, con cierre de caja automático al terminar cada día.
 
-Permite administrar el stock de productos, clientes, repartidores, compras a proveedores, ventas y cuentas fiadas (crédito a clientes), llevando el control de stock de forma automática en cada operación.
+Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) y se abre en una ventana propia, así que se usa como una app de escritorio. No necesita internet.
 
-## Funcionalidades
+![Pantalla principal con la caja del día](docs/captura-hoy.png)
 
-- **Productos**: alta, búsqueda por código, listado y baja lógica (no se borran físicamente, se marcan como inactivos).
-- **Clientes** y **Repartidores**: alta, listado y baja lógica.
-- **Compras**: registro de compras a proveedores, que suman stock automáticamente al producto correspondiente.
-- **Ventas**: registro de ventas con control de stock disponible, que descuentan stock automáticamente.
-- **Fiado**: registro de cuentas a crédito por cliente, con cálculo del total adeudado.
+## Qué hace
 
-## Stack técnico
+- **Anotar una venta en segundos**: se escribe el monto y se aprieta Enter. Acepta `1500`, `1.500` o `1.500,50`.
+- **Anotar gastos** por categoría (panadero, verdulería, servicios…). Sugiere las categorías que ya se usaron.
+- **Totales del día**: cuánto entró, cuánto salió y el balance, actualizados al instante.
+- **Cierre de caja automático** a la medianoche. Si la PC estuvo apagada, los días pendientes se cierran al abrir la app.
+- **Días anteriores**: se pueden revisar y corregir (por ejemplo, un gasto que no se anotó), y el cierre de ese día se recalcula solo.
 
-| Capa            | Tecnología                          |
-|-----------------|--------------------------------------|
-| UI              | Java Swing                          |
-| Persistencia    | Jakarta Persistence (JPA) + Hibernate 6 |
-| Base de datos   | PostgreSQL                          |
-| Build           | Maven                               |
+### Hoja de ruta
 
-## Arquitectura
+- [x] Caja del día: ventas, gastos, balance y cierre automático
+- [ ] Pedidos a proveedores: notas de qué pedirle a cada uno, días de visita del preventista y "llegó" con el monto de la boleta
+- [ ] Fiados: libreta por cliente con saldo acumulado e interés a pedido
+- [ ] Resúmenes: últimos 7 días y mes por mes, con gráficos
+- [ ] Productos con stock opcional, backup automático e ícono de escritorio
 
-El proyecto sigue una separación simple en tres capas:
+## Stack
 
-```
-src/main/java/org/kiosco/
-├── igu/            # Ventanas Swing (formularios y menú principal)
-├── logica/         # Entidades JPA (Producto, Cliente, Venta, Compra, Fiado, ...)
-└── persistencia/    # DAOs y manejo de la conexión (EntityManager)
-```
+| Capa | Tecnología |
+|---|---|
+| Backend | Java 21, Spring Boot 4.1 (Web MVC, Data JPA, Validation, Security) |
+| Persistencia | Hibernate 7, MySQL 8, migraciones con Flyway |
+| Interfaz | Thymeleaf, HTMX 2, plantilla [Tabler](https://tabler.io) (Bootstrap 5), empaquetadas como WebJars |
+| Tests | JUnit 5, AssertJ, MockMvc, Spring Security Test, H2 en modo MySQL |
 
-## Puesta en marcha
+## Decisiones de diseño
 
-### Requisitos
+- **Un solo libro de caja.** Cada peso que entra o sale es un renglón de `movimiento_caja` con un tipo: venta, gasto, pago de pedido o cobro de fiado. Todos los totales, cierres y resúmenes salen de sumar esa tabla, así que los números de las distintas pantallas siempre coinciden.
+- **La plata es `BigDecimal` / `DECIMAL(12,2)`**, nunca `double`, para no perder centavos por redondeo.
+- **El cierre diario es una foto guardada** (`cierre_diario`). El historial mensual queda armado de antemano y no hay que recalcular meses enteros cada vez.
+- **El reloj se inyecta** (`java.time.Clock`). Así los tests pueden simular que pasan los días, por ejemplo la PC apagada tres días, sin esperar a la medianoche.
+- **Seguridad pensada para uso local.** El servidor solo escucha en `127.0.0.1`. La protección CSRF evita que otra página abierta en el navegador cargue o borre movimientos. El token va en una cookie para que la pantalla, que queda abierta todo el día, siga funcionando aunque la app se reinicie.
+- **Todo se renderiza en el servidor, con HTMX.** Los formularios actualizan solo el panel del día, sin recargar la página y sin mantener una SPA aparte. Los formularios de carga funcionan igual sin JavaScript.
 
-- JDK 21+
-- Maven 3.8+
-- PostgreSQL corriendo localmente (o accesible por red)
+## Probarla sin instalar MySQL (modo demo)
 
-### 1. Crear la base de datos
-
-```bash
-createdb kiosco
-```
-
-Hibernate crea/actualiza las tablas automáticamente (`hibernate.hbm2ddl.auto=update`) al levantar la aplicación.
-
-### 2. Configurar la conexión
-
-La configuración por defecto (`src/main/resources/META-INF/persistence.xml`) apunta a `localhost:5432/kiosco` con usuario `postgres` y sin contraseña. Para no versionar credenciales, las siguientes variables de entorno sobreescriben esos valores si están definidas:
-
-| Variable       | Ejemplo                                    |
-|----------------|---------------------------------------------|
-| `DB_URL`       | `jdbc:postgresql://localhost:5432/kiosco`   |
-| `DB_USER`      | `postgres`                                  |
-| `DB_PASSWORD`  | `mi_password`                               |
-
-```bash
-export DB_URL=jdbc:postgresql://localhost:5432/kiosco
-export DB_USER=postgres
-export DB_PASSWORD=mi_password
-```
-
-### 3. Compilar y ejecutar
+El modo demo arranca con una base en memoria y dos meses de movimientos inventados.
 
 ```bash
 mvn clean package
-java -jar target/kiosco-1.0-SNAPSHOT.jar
+./kiosco.sh demo
 ```
 
-O directamente desde el IDE, ejecutando `org.kiosco.Main`.
+`kiosco.sh` levanta la app y la abre en una ventana de Chrome sin barra de direcciones. También se puede correr a mano con `java -jar target/kiosco.jar --spring.profiles.active=demo` y abrir http://localhost:8080.
 
-## Posibles mejoras futuras
+## Usarla con MySQL
 
-- Tests automatizados (unitarios para DAOs con una base en memoria/testcontainers).
-- Reportes de ventas/compras por período.
-- Autenticación de usuarios.
-- Migrar la UI a JavaFX o a una API REST + frontend web.
+1. En MySQL Workbench, abrí [`scripts/crear-base-mysql.sql`](scripts/crear-base-mysql.sql), cambiá la contraseña y ejecutalo. Esto crea la base `kiosco` y su usuario.
+2. Copiá [`scripts/kiosco.properties.ejemplo`](scripts/kiosco.properties.ejemplo) a `~/.kiosco/kiosco.properties` y poné esa misma contraseña. Ese archivo queda fuera del repositorio.
+3. Compilá y abrí la app:
+
+   ```bash
+   mvn clean package
+   ./kiosco.sh
+   ```
+
+Las tablas se crean solas la primera vez gracias a Flyway. En lugar del archivo también se pueden usar las variables de entorno `DB_URL`, `DB_USER` y `DB_PASSWORD`.
+
+## Tests
+
+```bash
+mvn test
+```
+
+Cubren tres cosas:
+
+- La lectura de montos escritos a la argentina.
+- El cierre automático: días con la PC apagada, correcciones de días ya cerrados y fechas futuras.
+- Las pantallas con MockMvc: carga con HTMX, errores de validación, redirección sin JavaScript y rechazo de pedidos sin token CSRF.
+
+## Estructura
+
+```
+src/main/java/org/kiosco/
+├── caja/      libro de caja: movimientos, totales y la pantalla "Hoy"
+├── cierre/    cierre diario automático
+├── comun/     lectura y formato de montos y fechas
+├── config/    seguridad y reloj
+└── demo/      datos de ejemplo del modo demo
+src/main/resources/
+├── db/migration/   migraciones de Flyway
+├── templates/      vistas Thymeleaf (layout + pantallas)
+└── static/         estilos y JavaScript propios
+```
+
+## Versión anterior
+
+La primera versión (tag [`v1-swing`](../../tree/v1-swing)) era una app de escritorio con Swing, JPA y PostgreSQL centrada en el stock. La v2 cambió el foco al control de la plata del día a día, que es lo que más hace falta cuando no hay tiempo para estar encima del negocio.

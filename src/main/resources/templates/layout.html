@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" th:fragment="pagina(titulo, contenido, activo)">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-header" th:if="${_csrf != null}" th:content="${_csrf.headerName}">
+    <meta name="csrf-token" th:if="${_csrf != null}" th:content="${_csrf.token}">
+    <title th:text="${titulo} + ' · Kiosco'">Kiosco</title>
+    <link rel="icon" th:href="@{/img/icono.svg}" type="image/svg+xml">
+    <link rel="stylesheet" th:href="@{/webjars/tabler__core/dist/css/tabler.min.css}">
+    <link rel="stylesheet" th:href="@{/webjars/tabler__icons-webfont/dist/tabler-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/kiosco.css}">
+</head>
+<body>
+<div class="page">
+    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu-lateral"
+                    aria-controls="menu-lateral" aria-expanded="false" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-brand navbar-brand-autodark">
+                <a th:href="@{/}" class="text-reset text-decoration-none">
+                    <i class="ti ti-building-store me-1" aria-hidden="true"></i> Kiosco
+                </a>
+            </div>
+            <div class="collapse navbar-collapse" id="menu-lateral">
+                <ul class="navbar-nav pt-lg-3">
+                    <li class="nav-item" th:classappend="${activo == 'hoy'} ? 'active'">
+                        <a class="nav-link" th:href="@{/}">
+                            <span class="nav-link-icon"><i class="ti ti-cash" aria-hidden="true"></i></span>
+                            <span class="nav-link-title">Hoy</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link disabled" title="Todavía no está disponible">
+                            <span class="nav-link-icon"><i class="ti ti-truck" aria-hidden="true"></i></span>
+                            <span class="nav-link-title">Pedidos</span>
+                            <span class="badge badge-sm bg-secondary-lt ms-auto">Pronto</span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link disabled" title="Todavía no está disponible">
+                            <span class="nav-link-icon"><i class="ti ti-notebook" aria-hidden="true"></i></span>
+                            <span class="nav-link-title">Fiados</span>
+                            <span class="badge badge-sm bg-secondary-lt ms-auto">Pronto</span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link disabled" title="Todavía no está disponible">
+                            <span class="nav-link-icon"><i class="ti ti-chart-bar" aria-hidden="true"></i></span>
+                            <span class="nav-link-title">Resúmenes</span>
+                            <span class="badge badge-sm bg-secondary-lt ms-auto">Pronto</span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <span class="nav-link disabled" title="Todavía no está disponible">
+                            <span class="nav-link-icon"><i class="ti ti-package" aria-hidden="true"></i></span>
+                            <span class="nav-link-title">Productos</span>
+                            <span class="badge badge-sm bg-secondary-lt ms-auto">Pronto</span>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+
+    <div class="page-wrapper">
+        <main th:replace="${contenido}"></main>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="error-conexion" class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive">
+        <div class="d-flex">
+            <div class="toast-body">No se pudo guardar. Recargá la página y probá de nuevo.</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/webjars/tabler__core/dist/js/tabler.min.js}"></script>
+<script th:src="@{/webjars/htmx.org/dist/htmx.min.js}"></script>
+<script th:src="@{/js/kiosco.js}"></script>
+</body>
+</html>

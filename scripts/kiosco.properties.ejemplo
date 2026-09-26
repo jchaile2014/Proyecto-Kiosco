@@ -1,0 +1,6 @@
+# Copiá este archivo a ~/.kiosco/kiosco.properties y poné la contraseña
+# que elegiste en crear-base-mysql.sql. Ese archivo queda solo en tu PC:
+# nunca se sube a GitHub.
+
+spring.datasource.username=kiosco
+spring.datasource.password=CAMBIAR_ESTA_CONTRASEÑA
