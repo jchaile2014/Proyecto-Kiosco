@@ -2,8 +2,8 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!--/* Los cinco números del período. La variación de lo vendido es opcional. */-->
-<div class="row row-cols-2 row-cols-lg-5 g-3 mb-3" th:fragment="totales(t, variacion, comparadoCon)">
+<!--/* Los cuatro números del período. La variación de lo vendido es opcional. */-->
+<div class="row row-cols-2 row-cols-lg-4 g-3 mb-3" th:fragment="totales(t, variacion, comparadoCon)">
     <div class="col">
         <div class="card h-100">
             <div class="card-body">
@@ -21,16 +21,9 @@
     <div class="col">
         <div class="card h-100">
             <div class="card-body">
-                <div class="subheader">Pagado en pedidos</div>
-                <div class="h1 mb-1" th:text="${@fmt.plata(t.pagosPedidos())}">$ 180.000</div>
-            </div>
-        </div>
-    </div>
-    <div class="col">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="subheader">Gastos</div>
-                <div class="h1 mb-1" th:text="${@fmt.plata(t.gastos())}">$ 75.200</div>
+                <div class="subheader">Pedidos</div>
+                <div class="h1 mb-1" th:text="${@fmt.plata(t.pedidos())}">$ 255.200</div>
+                <div class="small text-secondary">Todo lo pagado a proveedores</div>
             </div>
         </div>
     </div>
@@ -110,7 +103,6 @@
                 <th class="text-end">Vendido</th>
                 <th class="text-end">Fiados cobrados</th>
                 <th class="text-end">Pedidos</th>
-                <th class="text-end">Gastos</th>
                 <th class="text-end">Balance</th>
             </tr>
             </thead>
@@ -122,8 +114,7 @@
                 </td>
                 <td class="text-end monto" th:classappend="${t.ventas().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.ventas())}">$ 85.300</td>
                 <td class="text-end monto" th:classappend="${t.cobrosFiado().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.cobrosFiado())}">$ 0</td>
-                <td class="text-end monto" th:classappend="${t.pagosPedidos().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.pagosPedidos())}">$ 45.000</td>
-                <td class="text-end monto" th:classappend="${t.gastos().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.gastos())}">$ 12.800</td>
+                <td class="text-end monto" th:classappend="${t.pedidos().signum() == 0} ? 'text-muted'" th:text="${@fmt.plata(t.pedidos())}">$ 57.800</td>
                 <td class="text-end monto fw-medium" th:classappend="${t.balance().signum() < 0} ? 'text-red'" th:text="${@fmt.plata(t.balance())}">$ 27.500</td>
             </tr>
             </tbody>
@@ -132,8 +123,7 @@
                 <td>Total</td>
                 <td class="text-end monto" th:text="${@fmt.plata(t.ventas())}">$ 520.300</td>
                 <td class="text-end monto" th:text="${@fmt.plata(t.cobrosFiado())}">$ 12.400</td>
-                <td class="text-end monto" th:text="${@fmt.plata(t.pagosPedidos())}">$ 180.000</td>
-                <td class="text-end monto" th:text="${@fmt.plata(t.gastos())}">$ 75.200</td>
+                <td class="text-end monto" th:text="${@fmt.plata(t.pedidos())}">$ 255.200</td>
                 <td class="text-end monto" th:classappend="${t.balance().signum() < 0} ? 'text-red'" th:text="${@fmt.plata(t.balance())}">$ 277.500</td>
             </tr>
             </tfoot>
@@ -141,37 +131,20 @@
     </div>
 </div>
 
-<!--/* En qué se fue la plata del período. */-->
+<!--/* A quién se le pagó en el período: boletas de pedidos y lo pagado en el momento, juntos. */-->
 <div class="row row-cards mb-3" th:fragment="detalle(p)">
-    <div class="col-md-6">
-        <div class="card h-100">
+    <div class="col-lg-7">
+        <div class="card">
             <div class="card-header">
-                <h3 class="card-title">En qué se gastó</h3>
+                <h3 class="card-title">Pedidos por proveedor</h3>
             </div>
-            <div class="card-body text-secondary" th:if="${p.gastosPorCategoria().isEmpty()}">No hubo gastos.</div>
-            <table class="table table-vcenter card-table" th:unless="${p.gastosPorCategoria().isEmpty()}">
+            <div class="card-body text-secondary" th:if="${p.pedidosPorProveedor().isEmpty()}">No se pagó ningún pedido.</div>
+            <table class="table table-vcenter card-table" th:unless="${p.pedidosPorProveedor().isEmpty()}">
                 <tbody>
-                <tr th:each="g : ${p.gastosPorCategoria()}">
-                    <td th:text="${g.nombre()}">Panadero</td>
-                    <td class="text-end monto" th:text="${@fmt.plata(g.monto())}">$ 62.400</td>
-                    <td class="text-end text-secondary monto text-nowrap w-1" th:text="${@fmt.porcentaje(g.monto(), p.totales().gastos())}">83 %</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header">
-                <h3 class="card-title">Pagado a cada proveedor</h3>
-            </div>
-            <div class="card-body text-secondary" th:if="${p.pagadoPorProveedor().isEmpty()}">No llegó ningún pedido.</div>
-            <table class="table table-vcenter card-table" th:unless="${p.pagadoPorProveedor().isEmpty()}">
-                <tbody>
-                <tr th:each="pr : ${p.pagadoPorProveedor()}">
-                    <td th:text="${pr.nombre()}">Coca-Cola</td>
+                <tr th:each="pr : ${p.pedidosPorProveedor()}">
+                    <td th:text="${pr.nombre()}">Panadero</td>
                     <td class="text-end monto" th:text="${@fmt.plata(pr.monto())}">$ 76.500</td>
-                    <td class="text-end text-secondary monto text-nowrap w-1" th:text="${@fmt.porcentaje(pr.monto(), p.totales().pagosPedidos())}">54 %</td>
+                    <td class="text-end text-secondary monto text-nowrap w-1" th:text="${@fmt.porcentaje(pr.monto(), p.totales().pedidos())}">30 %</td>
                 </tr>
                 </tbody>
             </table>

@@ -4,6 +4,7 @@ import org.kiosco.caja.CajaService;
 import org.kiosco.caja.Totales;
 import org.kiosco.cierre.CierreDiario;
 import org.kiosco.cierre.CierreDiarioRepository;
+import org.kiosco.comun.MontoPorNombre;
 import org.kiosco.pedidos.PedidoService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,11 +14,14 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Los resúmenes salen de los cierres diarios que se fueron guardando. El día de hoy todavía
@@ -58,8 +62,7 @@ public class ResumenService {
         LocalDate hoy = LocalDate.now(clock);
         LocalDate fin = hasta.isAfter(hoy) ? hoy : hasta;
         List<Periodo.Dia> dias = dias(desde, fin);
-        return new Periodo(desde, fin, dias, sumar(dias),
-                caja.gastosPorCategoria(desde, fin), pedidos.pagadoPorProveedor(desde, fin));
+        return new Periodo(desde, fin, dias, sumar(dias), pedidosPorProveedor(desde, fin));
     }
 
     /** Todos los meses con movimientos, el más reciente primero. El actual es "lo que va del mes". */
@@ -75,6 +78,17 @@ public class ResumenService {
         porMes.merge(actual, caja.totalesDel(hoy), Totales::mas);
         return porMes.entrySet().stream()
                 .map(e -> new ResumenMes(e.getKey(), e.getValue(), e.getKey().equals(actual)))
+                .toList();
+    }
+
+    /** Boletas y pagos en el momento, sumados por nombre ("Panadero" y "panadero" son el mismo). */
+    private List<MontoPorNombre> pedidosPorProveedor(LocalDate desde, LocalDate hasta) {
+        Map<String, MontoPorNombre> porNombre = new LinkedHashMap<>();
+        Stream.concat(pedidos.pagadoPorProveedor(desde, hasta).stream(), caja.gastosPorCategoria(desde, hasta).stream())
+                .forEach(m -> porNombre.merge(m.nombre().toLowerCase(Locale.ROOT), m,
+                        (a, b) -> new MontoPorNombre(a.nombre(), a.monto().add(b.monto()))));
+        return porNombre.values().stream()
+                .sorted(Comparator.comparing(MontoPorNombre::monto).reversed())
                 .toList();
     }
 

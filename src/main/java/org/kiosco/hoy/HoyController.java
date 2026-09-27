@@ -26,7 +26,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static org.springframework.format.annotation.DateTimeFormat.ISO.DATE;
@@ -143,7 +146,7 @@ class HoyController {
             BigDecimal monto = Montos.parse(form.getMonto());
             MovimientoCaja gasto = caja.registrarGasto(dia, monto, form.getCategoria(), form.getDescripcion());
             model.addAttribute("gastoForm", new GastoForm());
-            model.addAttribute("avisoGasto", gasto.getCategoria() + ": " + fmt.plata(monto) + " anotado");
+            model.addAttribute("avisoGasto", "Pedido de " + gasto.getCategoria() + ": " + fmt.plata(monto) + " anotado");
             ok = true;
         } catch (DatoInvalidoException e) {
             model.addAttribute("errorGasto", e.getMessage());
@@ -204,7 +207,7 @@ class HoyController {
         model.addAttribute("cierre", cierres.cierreDel(dia).orElse(null));
         model.addAttribute("totales", caja.totalesDel(dia));
         model.addAttribute("movimientos", caja.movimientosDel(dia));
-        model.addAttribute("categorias", caja.categoriasDeGasto());
+        model.addAttribute("categorias", aQuienSePaga());
         // El código de producto solo aparece si se cargó alguno: la caja funciona igual sin productos
         model.addAttribute("productos", productos.buscar(""));
         CopiaDeSeguridadService.Resultado ultimaCopia = copias.ultimoResultado();
@@ -218,6 +221,14 @@ class HoyController {
         if (!model.containsAttribute("gastoForm")) {
             model.addAttribute("gastoForm", new GastoForm());
         }
+    }
+
+    /** Sugerencias para "A quién": los proveedores cargados y lo que ya se pagó antes (Panadero…). */
+    private List<String> aQuienSePaga() {
+        Map<String, String> nombres = new LinkedHashMap<>();
+        pedidos.proveedoresConNotas().forEach(p -> nombres.putIfAbsent(p.getNombre().toLowerCase(Locale.ROOT), p.getNombre()));
+        caja.categoriasDeGasto().forEach(c -> nombres.putIfAbsent(c.toLowerCase(Locale.ROOT), c));
+        return List.copyOf(nombres.values());
     }
 
     /** "Hoy viene el preventista de Coca-Cola (2 cosas anotadas) y Lácteos." */

@@ -1,6 +1,6 @@
 # Kiosco
 
-Control diario de la caja de un kiosco de barrio: lo que se vende, lo que se gasta, lo que se les paga a los proveedores y lo que se fía. Tiene cierre de caja automático al terminar cada día, resúmenes semanales y mensuales, y copias de seguridad automáticas.
+Control diario de la caja de un kiosco de barrio: lo que se vende, lo que se les paga a los proveedores y lo que se fía. Tiene cierre de caja automático al terminar cada día, resúmenes semanales y mensuales, y copias de seguridad automáticas.
 
 Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) y se abre en una ventana propia, así que se usa como una app de escritorio. No necesita internet.
 
@@ -11,10 +11,10 @@ Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) 
 ### Caja del día
 
 - **Anotar una venta en segundos**: se escribe el monto y se aprieta Enter. Acepta `1500`, `1.500` o `1.500,50`.
-- **Anotar gastos** por categoría (panadero, verdulería, servicios…). Sugiere las categorías que ya se usaron.
+- **Pagar un pedido en el momento** (el panadero, o un pedido que no se anotó): se escribe a quién y cuánto. Sugiere tus proveedores y a quién le pagaste antes.
 - **Totales del día**: cuánto entró, cuánto salió y el balance, actualizados al instante.
 - **Cierre de caja automático** a la medianoche. Si la PC estuvo apagada, los días pendientes se cierran al abrir la app.
-- **Días anteriores**: se pueden revisar y corregir (por ejemplo, un gasto que no se anotó), y el cierre de ese día se recalcula solo.
+- **Días anteriores**: se pueden revisar y corregir (por ejemplo, un pago que no se anotó), y el cierre de ese día se recalcula solo.
 
 ### Pedidos a proveedores
 
@@ -42,9 +42,9 @@ Es una app web que corre en la propia PC (**Spring Boot 4 + Thymeleaf + HTMX**) 
 
 ![Resumen de los últimos 7 días](docs/captura-resumenes.png)
 
-- **Últimos 7 días**: lo vendido, lo pagado en pedidos, los gastos, los fiados cobrados y el balance, comparando lo vendido con los 7 días anteriores. Incluye un gráfico día por día.
+- **Últimos 7 días**: lo vendido, los pedidos (todo lo pagado a proveedores), los fiados cobrados y el balance, comparando lo vendido con los 7 días anteriores. Incluye un gráfico día por día.
 - **Mes por mes**: un renglón por mes con lo vendido y lo pagado en pedidos. El mes actual muestra "lo que va". Los meses anteriores quedan guardados gracias a los cierres diarios.
-- **Detalle de cada mes**: día por día, en qué se gastó y cuánto se le pagó a cada proveedor.
+- **Detalle de cada mes**: día por día y cuánto se le pagó a cada proveedor, sumando boletas y pagos en el momento.
 - **Gráficos sin librerías**: se dibujan en el servidor con HTML y CSS. Tienen barras finas, grilla suave, un cartel al pasar el mouse (o con el teclado) y una tabla con los mismos números. Los colores se validaron para daltonismo y contraste.
 
 ### Productos (opcional)
@@ -64,7 +64,7 @@ La caja funciona con montos: los productos no hacen falta. Sirven para dos cosas
 
 ### Hoja de ruta
 
-- [x] Caja del día: ventas, gastos, balance y cierre automático
+- [x] Caja del día: ventas, pagos, balance y cierre automático
 - [x] Pedidos a proveedores: notas de qué pedirle a cada uno, días del preventista y "llegó" con el monto de la boleta
 - [x] Fiados: libreta por cliente con saldo acumulado, pagos, interés a pedido e historial
 - [x] Resúmenes: últimos 7 días y mes por mes, con gráficos
@@ -81,7 +81,7 @@ La caja funciona con montos: los productos no hacen falta. Sirven para dos cosas
 
 ## Decisiones de diseño
 
-- **Un solo libro de caja.** Cada peso que entra o sale es un renglón de `movimiento_caja` con un tipo: venta, gasto, pago de pedido o cobro de fiado. Todos los totales, cierres y resúmenes salen de sumar esa tabla, así que los números de las distintas pantallas siempre coinciden.
+- **Un solo libro de caja.** Cada peso que entra o sale es un renglón de `movimiento_caja` con un tipo: venta, gasto, pago de pedido o cobro de fiado. En las pantallas, las boletas de pedidos y lo pagado en el momento se muestran juntos como "Pedidos", porque para el kiosco son lo mismo. Todos los totales, cierres y resúmenes salen de sumar esa tabla, así que los números de las distintas pantallas siempre coinciden.
 - **La plata es `BigDecimal` / `DECIMAL(12,2)`**, nunca `double`, para no perder centavos por redondeo.
 - **El cierre diario es una foto guardada** (`cierre_diario`). El historial mensual queda armado de antemano y no hay que recalcular meses enteros cada vez.
 - **El reloj se inyecta** (`java.time.Clock`). Así los tests pueden simular que pasan los días, por ejemplo la PC apagada tres días, sin esperar a la medianoche.
@@ -93,7 +93,7 @@ La caja funciona con montos: los productos no hacen falta. Sirven para dos cosas
 
 ## Probarla sin instalar MySQL (modo demo)
 
-El modo demo arranca con una base en memoria y datos inventados: dos meses de ventas y gastos, proveedores con pedidos y clientes con fiado.
+El modo demo arranca con una base en memoria y datos inventados: dos meses de ventas y pagos, proveedores con pedidos y clientes con fiado.
 
 ```bash
 mvn clean package

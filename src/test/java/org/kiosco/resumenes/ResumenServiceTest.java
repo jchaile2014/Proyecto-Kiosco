@@ -96,24 +96,25 @@ class ResumenServiceTest {
     }
 
     @Test
-    void elPeriodoDiceEnQueSeGastoYCuantoSeLePagoACadaProveedor() {
+    void losPedidosPorProveedorJuntanLasBoletasConLoPagadoEnElMomento() {
         caja.registrarGasto(HOY, plata("12000"), "Panadero", null);
         caja.registrarGasto(HOY, plata("3000"), "Panadero", null);
         caja.registrarGasto(HOY, plata("48500"), "Servicios", "Luz");
+        // Un pedido de Coca-Cola que no se anotó y se pagó en el momento
+        caja.registrarGasto(HOY, plata("5000"), "coca-cola", null);
         Proveedor coca = pedidos.guardarProveedor(null, "Coca-Cola", null, null);
         Pedido pedido = pedidos.armarPedido(coca.getId(), null, null, null);
         pedidos.registrarLlegada(pedido.getId(), plata("76500"));
 
         Periodo semana = resumenes.ultimos7Dias();
 
-        assertThat(semana.gastosPorCategoria()).extracting(MontoPorNombre::nombre).containsExactly("Servicios", "Panadero");
-        assertThat(semana.gastosPorCategoria()).extracting(MontoPorNombre::monto)
-                .usingElementComparator(BigDecimal::compareTo).containsExactly(plata("48500"), plata("15000"));
-        assertThat(semana.pagadoPorProveedor()).singleElement().satisfies(p -> {
-            assertThat(p.nombre()).isEqualTo("Coca-Cola");
-            assertThat(p.monto()).isEqualByComparingTo("76500");
-        });
-        assertThat(semana.totales().balance()).isEqualByComparingTo("-140000");
+        assertThat(semana.pedidosPorProveedor()).extracting(MontoPorNombre::nombre)
+                .containsExactly("Coca-Cola", "Servicios", "Panadero");
+        assertThat(semana.pedidosPorProveedor()).extracting(MontoPorNombre::monto)
+                .usingElementComparator(BigDecimal::compareTo)
+                .containsExactly(plata("81500"), plata("48500"), plata("15000"));
+        assertThat(semana.totales().pedidos()).isEqualByComparingTo("145000");
+        assertThat(semana.totales().balance()).isEqualByComparingTo("-145000");
     }
 
     private void venderEl(LocalDate dia, String monto) {

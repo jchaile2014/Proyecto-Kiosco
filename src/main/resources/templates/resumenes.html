@@ -37,7 +37,7 @@
 
             <div class="card mb-3">
                 <div class="card-header">
-                    <h3 class="card-title">Vendido y pagado en pedidos</h3>
+                    <h3 class="card-title">Vendido y pedidos</h3>
                 </div>
                 <div class="card-body">
                     <figure th:replace="~{fragmentos/resumen :: grafico(${graficoMeses})}"></figure>
@@ -51,8 +51,7 @@
                         <tr>
                             <th>Mes</th>
                             <th class="text-end">Vendido</th>
-                            <th class="text-end">Pagado en pedidos</th>
-                            <th class="text-end">Gastos</th>
+                            <th class="text-end">Pedidos</th>
                             <th class="text-end">Fiados cobrados</th>
                             <th class="text-end">Balance</th>
                         </tr>
@@ -65,8 +64,7 @@
                                 <span class="badge bg-primary-lt ms-1" th:if="${m.enCurso()}">lo que va</span>
                             </td>
                             <td class="text-end monto" th:text="${@fmt.plata(t.ventas())}">$ 1.950.000</td>
-                            <td class="text-end monto" th:text="${@fmt.plata(t.pagosPedidos())}">$ 620.000</td>
-                            <td class="text-end monto" th:text="${@fmt.plata(t.gastos())}">$ 310.000</td>
+                            <td class="text-end monto" th:text="${@fmt.plata(t.pedidos())}">$ 930.000</td>
                             <td class="text-end monto" th:text="${@fmt.plata(t.cobrosFiado())}">$ 45.000</td>
                             <td class="text-end monto fw-medium" th:classappend="${t.balance().signum() < 0} ? 'text-red'"
                                 th:text="${@fmt.plata(t.balance())}">$ 1.065.000</td>

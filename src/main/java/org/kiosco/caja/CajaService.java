@@ -47,7 +47,7 @@ public class CajaService {
     public MovimientoCaja registrarGasto(LocalDate fecha, BigDecimal monto, String categoria, String descripcion) {
         String categoriaLimpia = limpiar(categoria, 60);
         if (categoriaLimpia == null) {
-            throw new DatoInvalidoException("Elegí o escribí en qué se gastó, por ejemplo Panadero.");
+            throw new DatoInvalidoException("Escribí a quién le pagaste, por ejemplo Panadero.");
         }
         String conMayuscula = categoriaLimpia.substring(0, 1).toUpperCase(Locale.ROOT) + categoriaLimpia.substring(1);
         return registrar(fecha, TipoMovimiento.GASTO, monto, limpiar(descripcion, 200), conMayuscula);

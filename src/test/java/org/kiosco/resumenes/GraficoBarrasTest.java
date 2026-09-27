@@ -52,7 +52,7 @@ class GraficoBarrasTest {
 
     @Test
     void conVariasSeriesSoloSeEscribeLaPrimeraDeLaUltimaColumnaParaQueNoSePisen() {
-        GraficoBarras g = GraficoBarras.armar("prueba", List.of("Vendido", "Pagado en pedidos"), List.of(
+        GraficoBarras g = GraficoBarras.armar("prueba", List.of("Vendido", "Pedidos"), List.of(
                 new GraficoBarras.Columna("Ago", "Agosto", "/a", List.of(new BigDecimal("1800000"), new BigDecimal("600000"))),
                 new GraficoBarras.Columna("Sep", "Septiembre", "/s", List.of(new BigDecimal("900000"), new BigDecimal("300000")))),
                 GraficoBarras.Destacar.ULTIMA_COLUMNA, fmt);
@@ -61,7 +61,7 @@ class GraficoBarrasTest {
         assertThat(g.grupos().getLast().barras()).extracting(GraficoBarras.Barra::etiqueta)
                 .containsExactly("$ 900 mil", null);
         assertThat(g.grupos().getLast().descripcionAccesible())
-                .isEqualTo("Septiembre: Vendido $ 900.000, Pagado en pedidos $ 300.000");
+                .isEqualTo("Septiembre: Vendido $ 900.000, Pedidos $ 300.000");
     }
 
     @Test

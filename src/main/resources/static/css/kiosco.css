@@ -150,7 +150,7 @@
 
 /* ---------- Gráficos de columnas (resúmenes) ----------
    Colores validados contra el fondo de las tarjetas (contraste y daltonismo):
-   serie 1 = Vendido (morado), serie 2 = Pagado en pedidos (dorado oscuro, 3,25:1 sobre blanco).
+   serie 1 = Vendido (morado), serie 2 = Pedidos (dorado oscuro, 3,25:1 sobre blanco).
    El color sigue a la serie en todos los gráficos. */
 .grafico {
     --serie-1: #6d28d9;

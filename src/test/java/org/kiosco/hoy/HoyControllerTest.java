@@ -88,12 +88,26 @@ class HoyControllerTest {
     }
 
     @Test
-    void elGastoPideEnQueSeGasto() throws Exception {
+    void pagarUnPedidoEnElMomentoPideAQuien() throws Exception {
         mvc.perform(post("/movimientos/gasto").with(csrf())
                         .header("HX-Request", "true")
                         .param("monto", "12800"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Elegí o escribí en qué se gastó")));
+                .andExpect(content().string(containsString("Escribí a quién le pagaste")));
+    }
+
+    @Test
+    void loPagadoEnElMomentoSeMuestraComoPedido() throws Exception {
+        mvc.perform(post("/movimientos/gasto").with(csrf())
+                        .header("HX-Request", "true")
+                        .param("monto", "12800")
+                        .param("categoria", "panadero"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(allOf(
+                        containsString("Pedido de Panadero: $ 12.800 anotado"),
+                        containsString(">Pedido</span>"),
+                        containsString("Pagar un pedido"),
+                        not(containsString("Gasto")))));
     }
 
     @Test

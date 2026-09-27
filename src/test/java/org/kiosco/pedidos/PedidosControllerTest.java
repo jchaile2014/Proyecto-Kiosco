@@ -170,7 +170,7 @@ class PedidosControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(allOf(
                         containsString("Llegó el pedido de Coca-Cola: $ 28.400 anotados como salida."),
-                        containsString("Pedidos $ 28.400"),
+                        containsString("<div class=\"h1 mb-1 text-red\">$ 28.400</div>"),
                         containsString("Boleta de Coca-Cola"))));
     }
 

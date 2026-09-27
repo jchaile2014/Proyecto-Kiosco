@@ -31,8 +31,14 @@ public record Totales(BigDecimal ventas, BigDecimal cobrosFiado, BigDecimal pago
         return ventas.add(cobrosFiado);
     }
 
-    public BigDecimal salidas() {
+    /** Todo lo pagado a proveedores: boletas de pedidos anotados más lo pagado en el momento. */
+    public BigDecimal pedidos() {
         return pagosPedidos.add(gastos);
+    }
+
+    /** Todo lo que sale de la caja son pedidos. */
+    public BigDecimal salidas() {
+        return pedidos();
     }
 
     public BigDecimal balance() {

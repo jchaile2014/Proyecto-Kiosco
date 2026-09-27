@@ -81,7 +81,7 @@ class ResumenesController {
         return GraficoBarras.armar(descripcion, List.of("Vendido"), columnas, GraficoBarras.Destacar.MAXIMO, fmt);
     }
 
-    /** Vendido contra pagado en pedidos, los últimos 12 meses de más viejo a más nuevo. */
+    /** Vendido contra pedidos (todo lo pagado a proveedores), los últimos 12 meses de más viejo a más nuevo. */
     private GraficoBarras graficoPorMes(List<ResumenMes> meses) {
         List<GraficoBarras.Columna> columnas = meses.stream()
                 .limit(MESES_EN_EL_GRAFICO)
@@ -90,9 +90,9 @@ class ResumenesController {
                         fmt.mes(m.mes()).substring(0, 3) + " " + m.mes().getYear(),
                         fmt.mes(m.mes()) + (m.enCurso() ? " (lo que va)" : ""),
                         "/resumenes/" + m.mes().getYear() + "/" + m.mes().getMonthValue(),
-                        List.of(m.totales().ventas(), m.totales().pagosPedidos())))
+                        List.of(m.totales().ventas(), m.totales().pedidos())))
                 .toList();
-        return GraficoBarras.armar("Vendido y pagado en pedidos, mes por mes", List.of("Vendido", "Pagado en pedidos"),
+        return GraficoBarras.armar("Vendido y pedidos, mes por mes", List.of("Vendido", "Pedidos"),
                 columnas, GraficoBarras.Destacar.ULTIMA_COLUMNA, fmt);
     }
 }
